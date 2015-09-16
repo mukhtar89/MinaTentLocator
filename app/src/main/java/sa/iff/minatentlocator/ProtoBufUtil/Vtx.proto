@@ -1,0 +1,6 @@
+option java_outer_classname="VtxProto";
+
+message Vtx {
+    required double Lat = 1;
+    required double Lng = 2;
+}

@@ -1,4 +1,4 @@
-package sa.iff.minatentlocator;
+package sa.iff.minatentlocator.Activities;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -8,6 +8,9 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import sa.iff.minatentlocator.GetPathPoints;
+import sa.iff.minatentlocator.R;
 
 public class MapsActivity extends FragmentActivity {
 

@@ -2,7 +2,6 @@ package sa.iff.minatentlocator;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -12,30 +11,21 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+import sa.iff.minatentlocator.GraphUtil.DjikstraEngine;
+import sa.iff.minatentlocator.GraphUtil.Vertex;
 
 /**
  * Created by Mukhtar on 8/26/2015.
  */
-public class RotaTask extends AsyncTask<Void, Integer, Boolean> {
+public class RotaTask {
 
-    private static final String TOAST_MSG = "Calculating";
-    private static final String TOAST_ERR_MAJ = "Impossible to trace Itinerary";
+    private static final String TOAST_MSG = "Sorry, No route found...!!";
     private Context context;
     private GoogleMap gMap;
     private String editFrom;
     private String editTo;
-    private final ArrayList<LatLng> lstLatLng = new ArrayList<>();
     private DjikstraEngine engine;
 
     public RotaTask(final Context context, final GoogleMap gMap, final String editFrom, final String editTo) {
@@ -45,94 +35,62 @@ public class RotaTask extends AsyncTask<Void, Integer, Boolean> {
         this.editTo = editTo;
     }
 
-    @Override
-    protected void onPreExecute() {
-        Toast.makeText(context, TOAST_MSG, Toast.LENGTH_LONG).show();
+    public LatLng getLatLng(String location) {
+        String[] loc = location.split(",");
+        String Lat = loc[0], Lng = loc[1];
+        return new LatLng(Double.parseDouble(Lat), Double.parseDouble(Lng));
     }
 
-    @Override
-    protected Boolean doInBackground(Void... params) {
-        try {
-            final StringBuilder url = new StringBuilder("http://maps.googleapis.com/maps/api/directions/xml?language=eng&mode=driving");
-            url.append("&origin=");
-            url.append(editFrom.replace(' ', '+'));
-            url.append("&destination=");
-            url.append(editTo.replace(' ', '+'));
+    protected void execute() {
+        engine = new DjikstraEngine(GraphMaker.makeGraph(context));
+        /*Vertex source = GraphMaker.getNearestNode(lstLatLng.get(0));
+        Vertex destination = GraphMaker.getNearestNode(lstLatLng.get(lstLatLng.size()-1));
+        Vertex source = GraphMaker.getNearestNode(getLatLng(editFrom));
+        Vertex destination = GraphMaker.getNearestNode(getLatLng(editTo));*/
+        Vertex source = GraphMaker.getNearestNode(getLatLng("21.397910,39.899868"));
+        Vertex destination = GraphMaker.getNearestNode(getLatLng("21.397638,39.900956"));
+        engine.execute(source);
+        final PolylineOptions polylines = new PolylineOptions();
+        polylines.color(Color.BLUE);
+        if (engine.getPath(destination) == null)
+            Toast.makeText(context, TOAST_MSG, Toast.LENGTH_LONG).show();
 
-            final InputStream stream = new URL(url.toString()).openStream();
-            final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-            documentBuilderFactory.setIgnoringComments(true);
-            final DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-            final Document document = documentBuilder.parse(stream);
-            document.getDocumentElement().normalize();
-
-            final String status = document.getElementsByTagName("status").item(0).getTextContent();
-            if(!"OK".equals(status)) { return false; }
-            final Element elementLeg = (Element) document.getElementsByTagName("leg").item(0);
-            final NodeList nodeListStep = elementLeg.getElementsByTagName("step");
-            final int length = nodeListStep.getLength();
-            for(int i=0; i<length; i++) {
-                final Node nodeStep = nodeListStep.item(i);
-                if(nodeStep.getNodeType() == Node.ELEMENT_NODE) {
-                    final Element elementStep = (Element) nodeStep; decodePolylines(elementStep.getElementsByTagName("points").item(0).getTextContent());
-                }
-            }
-            return true;
-        } catch(final Exception e) {
-            return false;
-        }
-    }
-
-    private void decodePolylines(final String encodedPoints) {
-        int index = 0;
-        int lat = 0, lng = 0;
-        LatLng temp1;
-        while (index < encodedPoints.length()) {
-            int b, shift = 0, result = 0;
-            do {
-                b = encodedPoints.charAt(index++) - 63;
-                result |= (b & 0x1f) << shift; shift += 5;
-            } while (b >= 0x20);
-            int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-            lat += dlat; shift = 0;
-            result = 0;
-            do {
-                b = encodedPoints.charAt(index++) - 63;
-                result |= (b & 0x1f) << shift;
-                shift += 5;
-            } while (b >= 0x20);
-            int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-            lng += dlng;
-            temp1 = new LatLng((double)lat/1E5, (double)lng/1E5);
-            lstLatLng.add(temp1);
-        }
-    }
-
-    @Override
-    protected void onPostExecute(final Boolean result) {
-        if (!result) {
-            Toast.makeText(context, TOAST_ERR_MAJ, Toast.LENGTH_SHORT).show();
-        } else {
-            engine = new DjikstraEngine(GraphMaker.makeGraph());
-            Vertex source = GraphMaker.getNode(lstLatLng.get(0));
-            Vertex destination = GraphMaker.getNode(lstLatLng.get(lstLatLng.size()-1));
-            engine.execute(source);
-            final PolylineOptions polylines = new PolylineOptions();
-            polylines.color(Color.BLUE);
+        else {
             for (final Vertex nodes : engine.getPath(destination)) {
                 polylines.add(nodes.getCoordinates());
             }
             final MarkerOptions markerA = new MarkerOptions();
-            markerA.position(lstLatLng.get(0));
+            markerA.position(source.getCoordinates());
             markerA.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
             final MarkerOptions markerB = new MarkerOptions();
-            markerB.position(lstLatLng.get(lstLatLng.size() - 1));
+            markerB.position(destination.getCoordinates());
             markerB.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-            gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lstLatLng.get(0), 10));
+            gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(source.getCoordinates(), 10));
             gMap.addMarker(markerA);
             gMap.addPolyline(polylines);
             gMap.addMarker(markerB);
         }
+    }
+
+    protected void showPath() {
+        GraphMaker.nodes = new ArrayList<>(GraphMaker.nodeMapping.values());
+        Vertex source = GraphMaker.nodes.get(0);
+        Vertex destination = GraphMaker.nodes.get(GraphMaker.nodes.size()-1);
+        final PolylineOptions polylines = new PolylineOptions();
+        polylines.color(Color.BLUE);
+        for (final Vertex node : GraphMaker.nodes) {
+            polylines.add(node.getCoordinates());
+        }
+        final MarkerOptions markerA = new MarkerOptions();
+        markerA.position(source.getCoordinates());
+        markerA.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+        final MarkerOptions markerB = new MarkerOptions();
+        markerB.position(destination.getCoordinates());
+        markerB.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+        gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(source.getCoordinates(), 10));
+        gMap.addMarker(markerA);
+        gMap.addPolyline(polylines);
+        gMap.addMarker(markerB);
     }
 }
 

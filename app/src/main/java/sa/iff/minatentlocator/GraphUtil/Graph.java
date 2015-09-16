@@ -1,4 +1,4 @@
-package sa.iff.minatentlocator;
+package sa.iff.minatentlocator.GraphUtil;
 
 import java.util.List;
 

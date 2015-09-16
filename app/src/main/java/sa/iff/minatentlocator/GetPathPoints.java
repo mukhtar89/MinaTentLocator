@@ -25,6 +25,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 public class GetPathPoints extends AsyncTask<Void, Integer, Boolean> {
 
     private static final String TOAST_MSG = "Getting Path Points";
+    private static final String TOAST_ERR_MAJ = "Impossible to trace Itinerary";
     private Context context;
     private GoogleMap gMap;
     private String editFrom;
@@ -39,6 +40,17 @@ public class GetPathPoints extends AsyncTask<Void, Integer, Boolean> {
         places.add(new String[]{"21.397138,39.901807", "21.394452,39.900775"});
         places.add(new String[]{"21.395331,39.903100", "21.395441,39.903004"});
         places.add(new String[]{"21.396080,39.900144", "21.396876,39.901256"});
+
+        places.add(new String[]{"21.392939,39.904108", "21.393148,39.902946"});
+        places.add(new String[]{"21.396482,39.902219", "21.394815,39.902741"});
+        places.add(new String[]{"21.395692,39.903418", "21.394535,39.905134"});
+
+        places.add(new String[]{"21.394701,39.904665", "21.393840,39.904218"});
+        /*places.add(new String[]{"21.396482,39.902219", "21.394815,39.902741"});
+        places.add(new String[]{"21.395692,39.903418", "21.394535,39.905134"});
+        places.add(new String[]{"21.392939,39.904108", "21.393148,39.902946"});
+        places.add(new String[]{"21.396482,39.902219", "21.394815,39.902741"});
+        places.add(new String[]{"21.395692,39.903418", "21.394535,39.905134"});*/
     }
 
     @Override
@@ -49,7 +61,7 @@ public class GetPathPoints extends AsyncTask<Void, Integer, Boolean> {
     @Override
     protected Boolean doInBackground(Void... params) {
         try {
-            for (int j = 0; j < 3; j++) {
+            for (int j = 0; j < places.size(); j++) {
                 final StringBuilder url = new StringBuilder("http://maps.googleapis.com/maps/api/directions/xml?language=eng&mode=driving");
                 url.append("&origin=");
                 url.append(places.get(j)[0].replace(' ', '+'));
@@ -112,8 +124,12 @@ public class GetPathPoints extends AsyncTask<Void, Integer, Boolean> {
 
     @Override
     protected void onPostExecute(final Boolean result) {
-        if (result == true)
-            new RotaTask(context, gMap, editTo, editFrom).execute();
+        if (!result)
+            Toast.makeText(context, TOAST_ERR_MAJ, Toast.LENGTH_SHORT).show();
+        else {
+            Toast.makeText(context, TOAST_MSG, Toast.LENGTH_LONG).show();
+            new RotaTask(context, gMap, editTo, editFrom).showPath();
+        }
     }
 }
 

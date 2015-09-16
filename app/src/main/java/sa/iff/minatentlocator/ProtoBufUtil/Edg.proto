@@ -1,0 +1,13 @@
+option java_outer_classname="EdgProto";
+
+message Edg {
+
+    message Vtx {
+        required double Lat = 1;
+        required double Lng = 2;
+    }
+
+    required Vtx source = 1;
+    required Vtx destination= 2;
+    required double distance = 3;
+}

@@ -1,4 +1,6 @@
-package sa.iff.minatentlocator;
+package sa.iff.minatentlocator.GraphUtil;
+
+import sa.iff.minatentlocator.MapUtils.SphericalUtil;
 
 /**
  * Created by Mukhtar on 9/12/2015.
