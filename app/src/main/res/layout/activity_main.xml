@@ -22,14 +22,15 @@
             android:layout_height="wrap_content"
             android:textStyle="bold" />
 
-        <EditText
-            android:id="@+id/editFrom"
+        <AutoCompleteTextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:text=""
+            android:hint="Source pole number: 1/162"
+            android:id="@+id/autoFrom"
             android:layout_weight="2"
-            android:inputType="text"
             android:lines="1"
-            android:maxLines="1" />
+            android:maxLines="1"/>
 
     </LinearLayout>
 
@@ -46,15 +47,15 @@
             android:layout_height="wrap_content"
             android:textStyle="bold" />
 
-        <EditText
-
-            android:id="@+id/editTo"
+        <AutoCompleteTextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:text=""
+            android:hint="Dest pole number: 3/48"
+            android:id="@+id/autoTo"
             android:layout_weight="2"
-            android:inputType="text"
             android:lines="1"
-            android:maxLines="1" />
+            android:maxLines="1"/>
 
     </LinearLayout>
 
@@ -63,5 +64,11 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:text="Go" />
+
+    <Button
+        android:id="@+id/btnMyLoc"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:text="Use My Location as Source" />
 
 </LinearLayout>

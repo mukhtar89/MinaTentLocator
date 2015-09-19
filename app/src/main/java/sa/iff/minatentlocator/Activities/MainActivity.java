@@ -6,40 +6,74 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Hashtable;
+
+import sa.iff.minatentlocator.Locations;
 import sa.iff.minatentlocator.R;
 
 public class MainActivity extends AppCompatActivity {
 
-    private EditText editFrom;
-    private EditText editTo;
-    private Button btnGo;
+    private AutoCompleteTextView editFrom;
+    private AutoCompleteTextView editTo;
+    private Button btnGo, btnMyLoc;
+    private Locations locations;
+    private Hashtable<String, String> locationList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState); setContentView(R.layout.activity_main);
-        editFrom = (EditText) findViewById(R.id.editFrom);
-        editTo = (EditText) findViewById(R.id.editTo);
-        btnGo = (Button) findViewById(R.id.btnGo);
-        btnGo.setOnClickListener(new View.OnClickListener() {
-            /** * {@inheritDoc} */
-            @Override
-            public void onClick(final View v) {
-                if ("".equals(editFrom.getText().toString().trim())) {
-                    Toast.makeText(MainActivity.this, "Enter the starting point", Toast.LENGTH_SHORT).show();
-                } else if ("".equals(editTo.getText().toString().trim())) {
-                    Toast.makeText(MainActivity.this, "Enter the destination point", Toast.LENGTH_SHORT).show();
-                } else {
-                    final Intent intent = new Intent(MainActivity.this, MapsActivity.class);
-                    intent.putExtra("FROM", editFrom.getText().toString().trim());
-                    intent.putExtra("TO", editTo.getText().toString().trim());
-                    MainActivity.this.startActivity(intent);
+        try {
+            locations = new Locations(this);
+            locationList = locations.parseLocations();
+            ArrayList<String> poleNumbers = new ArrayList<>(locationList.keySet());
+            editFrom = (AutoCompleteTextView) findViewById(R.id.autoFrom);
+            editTo = (AutoCompleteTextView) findViewById(R.id.autoTo);
+            ArrayAdapter<String> locationAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, poleNumbers);
+            editFrom.setAdapter(locationAdapter);
+            editTo.setAdapter(locationAdapter);
+            btnGo = (Button) findViewById(R.id.btnGo);
+            btnGo.setOnClickListener(new View.OnClickListener() {
+                /** * {@inheritDoc} */
+                @Override
+                public void onClick(final View v) {
+                    if (!locationList.containsKey(editFrom.getText().toString())) {
+                        Toast.makeText(MainActivity.this, "Enter the starting point", Toast.LENGTH_SHORT).show();
+                    } else if (!locationList.containsKey(editTo.getText().toString())) {
+                        Toast.makeText(MainActivity.this, "Enter the destination point", Toast.LENGTH_SHORT).show();
+                    } else {
+                        final Intent intent = new Intent(MainActivity.this, MapsActivity.class);
+                        intent.putExtra("FROM", locationList.get(editFrom.getText().toString()));
+                        intent.putExtra("TO", locationList.get(editTo.getText().toString()));
+                        MainActivity.this.startActivity(intent);
+                    }
                 }
-            }
-        });
+            });
+            btnMyLoc = (Button) findViewById(R.id.btnMyLoc);
+            btnMyLoc.setOnClickListener(new View.OnClickListener() {
+                /** * {@inheritDoc} */
+                @Override
+                public void onClick(final View v) {
+                    if (!locationList.containsKey(editTo.getText().toString())) {
+                        Toast.makeText(MainActivity.this, "Enter the destination point", Toast.LENGTH_SHORT).show();
+                    } else {
+                        final Intent intent = new Intent(MainActivity.this, MapsActivity.class);
+                        intent.putExtra("FROM", "myloc");
+                        intent.putExtra("TO", locationList.get(editTo.getText().toString()));
+                        MainActivity.this.startActivity(intent);
+                    }
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override

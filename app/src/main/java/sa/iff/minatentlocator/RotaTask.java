@@ -2,6 +2,7 @@ package sa.iff.minatentlocator;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.location.Location;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -41,46 +42,55 @@ public class RotaTask {
         return new LatLng(Double.parseDouble(Lat), Double.parseDouble(Lng));
     }
 
-    protected void execute() {
+    public void execute() {
         engine = new DjikstraEngine(GraphMaker.makeGraph(context));
-        /*Vertex source = GraphMaker.getNearestNode(lstLatLng.get(0));
-        Vertex destination = GraphMaker.getNearestNode(lstLatLng.get(lstLatLng.size()-1));
-        Vertex source = GraphMaker.getNearestNode(getLatLng(editFrom));
-        Vertex destination = GraphMaker.getNearestNode(getLatLng(editTo));*/
-        Vertex source = GraphMaker.getNearestNode(getLatLng("21.397910,39.899868"));
-        Vertex destination = GraphMaker.getNearestNode(getLatLng("21.397638,39.900956"));
-        engine.execute(source);
+        LatLng source = getLatLng(editFrom.replace(" ",""));
+        LatLng destination = getLatLng(editTo.replace(" ", ""));
+        engine.execute(GraphMaker.getNearestNode(source));
         final PolylineOptions polylines = new PolylineOptions();
         polylines.color(Color.BLUE);
-        if (engine.getPath(destination) == null)
+        if (engine.getPath(GraphMaker.getNearestNode(destination)) == null) {
             Toast.makeText(context, TOAST_MSG, Toast.LENGTH_LONG).show();
-
+            polylines.add(source);
+            polylines.add(destination);
+        }
         else {
-            for (final Vertex nodes : engine.getPath(destination)) {
+            polylines.add(source);
+            for (final Vertex nodes : engine.getPath(GraphMaker.getNearestNode(destination))) {
                 polylines.add(nodes.getCoordinates());
             }
-            final MarkerOptions markerA = new MarkerOptions();
-            markerA.position(source.getCoordinates());
-            markerA.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-            final MarkerOptions markerB = new MarkerOptions();
-            markerB.position(destination.getCoordinates());
-            markerB.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-            gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(source.getCoordinates(), 10));
-            gMap.addMarker(markerA);
-            gMap.addPolyline(polylines);
-            gMap.addMarker(markerB);
+            polylines.add(destination);
         }
+        final MarkerOptions markerA = new MarkerOptions();
+        markerA.position(source);
+        markerA.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+        final MarkerOptions markerB = new MarkerOptions();
+        markerB.position(destination);
+        markerB.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+        gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(source, 15));
+        gMap.addMarker(markerA);
+        gMap.addPolyline(polylines);
+        gMap.addMarker(markerB);
+        gMap.setMyLocationEnabled(true);
+        final MarkerOptions myLoc = new MarkerOptions();
+        gMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+            @Override
+            public void onMyLocationChange(Location location) {
+                LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
+                if ((int)loc.latitude == 21 && (int)loc.longitude == 39) {
+                    gMap.addMarker(myLoc.position(loc));
+                    if (gMap != null)
+                        gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 15));
+                }
+            }
+        });
     }
 
     protected void showPath() {
-        GraphMaker.nodes = new ArrayList<>(GraphMaker.nodeMapping.values());
+        GraphMaker.makeGraph(context);
+        GraphMaker.nodes = new ArrayList<>(GraphMaker.readNodeMapping.values());
         Vertex source = GraphMaker.nodes.get(0);
         Vertex destination = GraphMaker.nodes.get(GraphMaker.nodes.size()-1);
-        final PolylineOptions polylines = new PolylineOptions();
-        polylines.color(Color.BLUE);
-        for (final Vertex node : GraphMaker.nodes) {
-            polylines.add(node.getCoordinates());
-        }
         final MarkerOptions markerA = new MarkerOptions();
         markerA.position(source.getCoordinates());
         markerA.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
@@ -89,8 +99,12 @@ public class RotaTask {
         markerB.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(source.getCoordinates(), 10));
         gMap.addMarker(markerA);
-        gMap.addPolyline(polylines);
-        gMap.addMarker(markerB);
+        for (final Vertex node : GraphMaker.nodes) {
+            final MarkerOptions marker = new MarkerOptions();
+            marker.position(node.getCoordinates());
+            marker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+            gMap.addMarker(marker);
+        }
     }
 }
 

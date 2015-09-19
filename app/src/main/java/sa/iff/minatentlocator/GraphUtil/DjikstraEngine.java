@@ -56,10 +56,10 @@ public class DjikstraEngine {
 
     private Double getDistance(Vertex node, Vertex target) {
         for (Edge edge :  edges) {
-            if (edge.getSource() == node && edge.getDestination() == target)
+            if ((edge.getSource() == node && edge.getDestination() == target) || (edge.getSource() == target && edge.getDestination() == node))
                 return edge.getDistance();
         }
-        return 0.00;
+        return Double.MAX_VALUE;
     }
 
     private List<Vertex> getNeighbours(Vertex node) {

@@ -27,12 +27,15 @@ public class GraphMaker {
 	public static List<Vertex> nodes;
 	public static List<Edge> edges = new ArrayList<>();
 	public static Hashtable<LatLng, Vertex> nodeMapping = new Hashtable<>();
+	public static Hashtable<Vertex[], Edge> edgeMapping = new Hashtable<>();
 
-	private static List<Vertex> readNodes;
-	private static List<Edge> readEdges = new ArrayList<>();
-	private static Hashtable<LatLng, Vertex> readNodeMapping = new Hashtable<>();
+	public static List<Vertex> readNodes;
+	public static List<Edge> readEdges = new ArrayList<>();
+	public static Hashtable<LatLng, Vertex> readNodeMapping = new Hashtable<>();
+
+	private static File path;
 	
-	public static void add (LatLng point, LatLng neighbour) {
+	public static synchronized void add (LatLng point, LatLng neighbour) {
 		Vertex tempPoint = null, tempNeighbour = null;
 		if (point != null) {
 			if (!nodeMapping.containsKey(point)) {
@@ -47,14 +50,16 @@ public class GraphMaker {
 			} else tempNeighbour = nodeMapping.get(neighbour);
 		}
 		if (point != null && neighbour != null)
-			edges.add(new Edge(tempPoint, tempNeighbour));
+			if (!edgeMapping.containsKey(new Vertex[]{tempPoint, tempNeighbour}))
+				edges.add(new Edge(tempPoint, tempNeighbour));
 	}
 
 	public static Graph makeGraph(Context context) {
 		nodes = new ArrayList<>(nodeMapping.values());
+		path = context.getExternalFilesDir(null);
 		try {
-			saveGraph(context);
-			graph = readGraph(context);
+			graph = readGraph();
+			//saveGraph();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -78,9 +83,8 @@ public class GraphMaker {
 		return nearest;
 	}
 
-	public static void saveGraph(Context context) throws IOException {
-		File path = context.getFilesDir();
-		File fileVertex = new File(path, "vertexes.ser");
+	public static void saveGraph() throws IOException {
+		File fileVertex = new File(path, "vertexes_final.ser");
 		FileOutputStream streamVertex = new FileOutputStream(fileVertex);
 		streamVertex.flush();
 		Integer offsetVertex;
@@ -93,9 +97,20 @@ public class GraphMaker {
 			streamVertex.write(offsetVertex.byteValue());
 			streamVertex.write(node.toByteArray());
 		}
+		for (Vertex vtx : readNodes) {
+			if (!nodeMapping.containsKey(vtx.getCoordinates())) {
+				VtxProto.Vtx node = VtxProto.Vtx.newBuilder()
+						.setLat(vtx.getCoordinates().latitude)
+						.setLng(vtx.getCoordinates().longitude)
+						.build();
+				offsetVertex = node.getSerializedSize();
+				streamVertex.write(offsetVertex.byteValue());
+				streamVertex.write(node.toByteArray());
+			}
+		}
 		streamVertex.close();
 
-		File fileEdge = new File(path, "edges.ser");
+		File fileEdge = new File(path, "edges_final.ser");
 		FileOutputStream streamEdge = new FileOutputStream(fileEdge);
 		Integer offsetEdge;
 		for (Edge edge : edges) {
@@ -116,16 +131,36 @@ public class GraphMaker {
 			streamEdge.write(offsetEdge.byteValue());
 			streamEdge.write(edg.toByteArray());
 		}
+		for (Edge edge : readEdges) {
+			if (!edgeMapping.containsKey(new Vertex[]{edge.getSource(), edge.getDestination()})
+					&&  !edgeMapping.containsKey(new Vertex[]{edge.getDestination(), edge.getSource()})) {
+				EdgProto.Edg.Vtx source = EdgProto.Edg.Vtx.newBuilder()
+						.setLat(edge.getSource().getCoordinates().latitude)
+						.setLng(edge.getSource().getCoordinates().longitude)
+						.build();
+				EdgProto.Edg.Vtx destination = EdgProto.Edg.Vtx.newBuilder()
+						.setLat(edge.getDestination().getCoordinates().latitude)
+						.setLng(edge.getDestination().getCoordinates().longitude)
+						.build();
+				EdgProto.Edg edg = EdgProto.Edg.newBuilder()
+						.setSource(source)
+						.setDestination(destination)
+						.setDistance(edge.getDistance())
+						.build();
+				offsetEdge = edg.getSerializedSize();
+				streamEdge.write(offsetEdge.byteValue());
+				streamEdge.write(edg.toByteArray());
+			}
+		}
 		streamEdge.close();
 	}
 
-	public static Graph readGraph(Context context) throws IOException {
-		File path = context.getFilesDir();
+	public static Graph readGraph() throws IOException {
 		File fileVertex = new File(path, "vertexes.ser");
 		FileInputStream streamVertex = new FileInputStream(fileVertex);
-		Integer offsetVertex = 0, currentVertex = 0;
 		Integer fileVertexSize = (int) fileVertex.length();
 		byte[] BufferVertex = new byte[fileVertexSize];
+		Integer offsetVertex = 0, currentVertex = 0;
 		streamVertex.read(BufferVertex);
 		while (currentVertex < fileVertexSize){
 			Byte length = BufferVertex[currentVertex];

@@ -3,19 +3,20 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.0"
-
     defaultConfig {
         applicationId "sa.iff.minatentlocator"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 1
-        versionName "0.0.1"
+        versionCode 3
+        versionName '0.9'
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    productFlavors {
     }
 }
 
