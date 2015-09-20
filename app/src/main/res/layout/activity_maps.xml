@@ -1,7 +1,50 @@
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/map"
-    tools:context=".MapsActivity"
-    android:name="com.google.android.gms.maps.MapFragment" />
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    tools:context=".MapsActivity">
+
+    <fragment
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.MapFragment" />
+
+    <GridLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textSize="17sp"
+        android:rowCount="2"
+        android:columnCount="2"
+        android:layout_gravity="center_horizontal|bottom"
+        android:background="#FFFFFF"
+        android:textColor="#000000"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Distance: "
+            android:id="@+id/distance"
+            android:layout_column="0"
+            android:layout_row="0"
+            android:layout_columnSpan="1"
+            android:layout_columnWeight="0.5"
+            android:textStyle="bold"
+            android:textColor="@android:color/holo_red_dark" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Time: "
+            android:id="@+id/esttime"
+            android:layout_column="1"
+            android:layout_row="0"
+            android:layout_columnSpan="1"
+            android:layout_columnWeight="0.5"
+            android:textStyle="bold"
+            android:textColor="@android:color/holo_green_dark" />
+
+    </GridLayout>
+
+</FrameLayout>

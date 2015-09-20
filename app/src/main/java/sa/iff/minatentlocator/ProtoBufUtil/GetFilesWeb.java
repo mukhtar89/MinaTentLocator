@@ -2,7 +2,10 @@ package sa.iff.minatentlocator.ProtoBufUtil;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.GoogleMap;
 
@@ -12,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
+import sa.iff.minatentlocator.DialogWebConnect;
 import sa.iff.minatentlocator.RotaTask;
 
 /**
@@ -25,14 +29,27 @@ public class GetFilesWeb extends AsyncTask<String, Void, Boolean> {
     private String editFrom;
     private String editTo;
     private ProgressDialog progressMeta;
+    private TextView distance, estTime;
+    private DialogWebConnect dialogWebConnect;
+    private NetworkInfo activeNetworkInfo;
 
-    public GetFilesWeb(Context context, GoogleMap gMap, String editFrom, String editTo) {
+    public GetFilesWeb(Context context, GoogleMap gMap, String editFrom, String editTo, TextView distance, TextView estTime) {
         this.context = context;
         path = this.context.getExternalFilesDir(null);
         this.gMap = gMap;
         this.editFrom = editFrom;
         this.editTo = editTo;
+        this.distance = distance;
+        this.estTime = estTime;
         progressMeta = new ProgressDialog(this.context);
+        dialogWebConnect = new DialogWebConnect(this.context);
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        if (activeNetworkInfo != null) {
+            if (!activeNetworkInfo.isConnected())
+                dialogWebConnect.show();
+        }
+        else dialogWebConnect.show();
     }
 
     @Override
@@ -65,7 +82,7 @@ public class GetFilesWeb extends AsyncTask<String, Void, Boolean> {
         super.onPreExecute();
         progressMeta.setTitle("Downloading Metadata");
         progressMeta.setMessage("Initial downloading of Map Directions Metadata");
-        progressMeta.setCancelable(true);
+        progressMeta.setCancelable(false);
         progressMeta.show();
     }
 
@@ -75,9 +92,9 @@ public class GetFilesWeb extends AsyncTask<String, Void, Boolean> {
         progressMeta.dismiss();
         if (!editFrom.equals("myloc")) {
             if (result)
-                new RotaTask(context, gMap, editFrom, editTo).execute();
+                new RotaTask(context, gMap, editFrom, editTo).execute(distance, estTime);
         }
         else
-            new RotaTask(context, gMap, editTo, editTo).execute();
+            new RotaTask(context, gMap, editTo, editTo).execute(distance, estTime);
     }
 }

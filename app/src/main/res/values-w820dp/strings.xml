@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dialog_internet">Connect Internet</string>
+    <string name="dialog_wifi">WIFI</string>
+    <string name="dialog_data">Mobile Data</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="about">About</string>
+</resources>

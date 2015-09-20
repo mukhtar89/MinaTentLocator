@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -21,27 +22,31 @@ public class MapsActivity extends FragmentActivity {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private Context context;
+    private TextView distance, estTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState); setContentView(R.layout.activity_maps);
         mMap = ((MapFragment)getFragmentManager().findFragmentById(R.id.map)).getMap();
+        distance = (TextView) findViewById(R.id.distance);
+        estTime = (TextView) findViewById(R.id.esttime);
         mMap.setMyLocationEnabled(true);
         context = this;
         final String editFrom = getIntent().getStringExtra("FROM");
         final String editTo = getIntent().getStringExtra("TO");
         getExternalFilesDir(null);
         if (getExternalFilesDir(null).list().length < 2)
-            new GetFilesWeb(this, mMap, editFrom, editTo).execute("https://goo.gl/TWSPTO", "https://goo.gl/nlGB0u");
+            new GetFilesWeb(this, mMap, editFrom, editTo, distance, estTime).execute("https://goo.gl/TWSPTO", "https://goo.gl/nlGB0u");
         else {
             if (editFrom.equals("myloc")) {
                 mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
                     @Override
                     public void onMyLocationChange(Location location) {
                         LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
-                        if ((int) loc.latitude == 21 && (int) loc.longitude == 39) {
+                        if (loc.latitude >= 21.398361 && loc.latitude <= 21.430332
+                                && loc.longitude >= 39.864674 && loc.longitude <= 39.912254) {
                             String locString = loc.latitude + "," + loc.longitude;
-                            new RotaTask(context, mMap, locString, editTo).execute();
+                            new RotaTask(context, mMap, locString, editTo).execute(distance, estTime);
                         } else {
                             Toast.makeText(context, "You are not in Mina. Directions cannot be calculated", Toast.LENGTH_LONG).show();
                             Intent intentMain = new Intent(MapsActivity.this, MainActivity.class);
@@ -50,7 +55,7 @@ public class MapsActivity extends FragmentActivity {
                         }
                     }
                 });
-            } else new RotaTask(this, mMap, editFrom, editTo).execute();
+            } else new RotaTask(this, mMap, editFrom, editTo).execute(distance, estTime);
         }
         //new GetPathPoints(this, mMap, editFrom, editTo).execute();
         setUpMapIfNeeded();

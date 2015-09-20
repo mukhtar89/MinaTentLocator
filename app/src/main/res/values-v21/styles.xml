@@ -2,8 +2,9 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="actionBarStyle">@style/MyActionBar</item>
-        <item name="colorAccent">#2659A8</item>
+        <item name="colorPrimary">#2659A8</item>
+        <item name="colorPrimaryDark">#2659A8</item>
+        <item name="android:colorAccent">#2659A8</item>
     </style>
 
     <style name="MyActionBar" parent="Widget.AppCompat.Light.ActionBar.Solid.Inverse">
