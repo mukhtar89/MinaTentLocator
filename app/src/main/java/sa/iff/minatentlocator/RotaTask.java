@@ -5,6 +5,8 @@ import android.content.Context;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,7 +19,9 @@ import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
 
+import sa.iff.minatentlocator.Activities.MapsActivity;
 import sa.iff.minatentlocator.GraphUtil.DjikstraEngine;
+import sa.iff.minatentlocator.GraphUtil.Graph;
 import sa.iff.minatentlocator.GraphUtil.Vertex;
 import sa.iff.minatentlocator.MapUtils.SphericalUtil;
 
@@ -33,6 +37,7 @@ public class RotaTask {
     private String editTo;
     private DjikstraEngine engine;
     private ProgressDialog progressEngine;
+    private static MapsActivity parent;
 
     public RotaTask(final Context context, final GoogleMap gMap, final String editFrom, final String editTo) {
         this.context = context;
@@ -50,17 +55,34 @@ public class RotaTask {
 
     public void execute(final TextView distance, final TextView estTime) {
         final PolylineOptions polylines = new PolylineOptions();
+        final Handler handler = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                if (msg.arg1 == 1)
+                    Toast.makeText(context, TOAST_MSG, Toast.LENGTH_LONG).show();
+                return false;
+            }
+        });
         new AsyncTask<Void, Void, PolylineOptions>() {
             LatLng source = getLatLng(editFrom.replace(" ",""));
             LatLng destination = getLatLng(editTo.replace(" ", ""));
 
             @Override
             protected PolylineOptions doInBackground(Void... params) {
-                engine = new DjikstraEngine(GraphMaker.makeGraph(context));
+                Graph graph = null;
+                while (graph == null)
+                    graph = GraphMaker.makeGraph(context);
+                engine = new DjikstraEngine(graph);
                 engine.execute(GraphMaker.getNearestNode(source));
                 polylines.color(Color.BLUE);
                 if (engine.getPath(GraphMaker.getNearestNode(destination)) == null) {
-                    Toast.makeText(context, TOAST_MSG, Toast.LENGTH_LONG).show();
+                    final Message msg = new Message();
+                    new Thread() {
+                        public void run() {
+                            msg.arg1 = 1;
+                            handler.sendMessage(msg);
+                        }
+                    }.start();
                     polylines.add(source);
                     polylines.add(destination);
                 }

@@ -7,8 +7,8 @@ android {
         applicationId "sa.iff.minatentlocator"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 9
-        versionName '1.5'
+        versionCode 12
+        versionName '1.9'
     }
     buildTypes {
         release {
