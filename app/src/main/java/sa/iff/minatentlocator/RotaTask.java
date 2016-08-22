@@ -2,11 +2,13 @@ package sa.iff.minatentlocator;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.app.ActivityCompat;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,15 +38,19 @@ public class RotaTask {
     private String editFrom;
     private String editTo;
     private DjikstraEngine engine;
-    private ProgressDialog progressEngine;
+    public ProgressDialog progressEngine;
     private static MapsActivity parent;
+    private Locations locations;
+    private String place;
 
-    public RotaTask(final Context context, final GoogleMap gMap, final String editFrom, final String editTo) {
+    public RotaTask(final Context context, final GoogleMap gMap, final String editFrom, final String editTo, String place) {
         this.context = context;
-        this.gMap= gMap;
+        this.gMap = gMap;
         this.editFrom = editFrom;
         this.editTo = editTo;
+        this.place = place;
         progressEngine = new ProgressDialog(this.context);
+        locations = new Locations(context);
     }
 
     public LatLng getLatLng(String location) {
@@ -64,14 +70,14 @@ public class RotaTask {
             }
         });
         new AsyncTask<Void, Void, PolylineOptions>() {
-            LatLng source = getLatLng(editFrom.replace(" ",""));
+            LatLng source = getLatLng(editFrom.replace(" ", ""));
             LatLng destination = getLatLng(editTo.replace(" ", ""));
 
             @Override
             protected PolylineOptions doInBackground(Void... params) {
                 Graph graph = null;
                 while (graph == null)
-                    graph = GraphMaker.makeGraph(context);
+                    graph = GraphMaker.makeGraph(context, place);
                 engine = new DjikstraEngine(graph);
                 engine.execute(GraphMaker.getNearestNode(source));
                 polylines.color(Color.BLUE);
@@ -85,8 +91,7 @@ public class RotaTask {
                     }.start();
                     polylines.add(source);
                     polylines.add(destination);
-                }
-                else {
+                } else {
                     polylines.add(source);
                     for (final Vertex nodes : engine.getPath(GraphMaker.getNearestNode(destination))) {
                         polylines.add(nodes.getCoordinates());
@@ -119,25 +124,36 @@ public class RotaTask {
                 gMap.addMarker(markerA);
                 gMap.addPolyline(polylines);
                 gMap.addMarker(markerB);
-                double dist = 0;  LatLng temp = null;
+                double dist = 0;
+                LatLng temp = null;
                 for (LatLng point : polylines.getPoints()) {
                     if (temp != null)
                         dist += SphericalUtil.computeDistanceBetween(temp, point);
                     temp = point;
                 }
-                double time = dist/(1.4*60);
-                distance.setText("Distance: " + (int)dist + " meters");
-                estTime.setText("Avg Time: " + (int)time + " minutes");
+                double time = dist / (1.4 * 60);
+                distance.setText("Distance: " + (int) dist + " meters");
+                estTime.setText("Avg Time: " + (int) time + " minutes");
             }
         }.execute();
+        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         gMap.setMyLocationEnabled(true);
         final MarkerOptions myLoc = new MarkerOptions();
         gMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
             @Override
             public void onMyLocationChange(Location location) {
                 LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
-                if (loc.latitude >= 21.398361 && loc.latitude <= 21.430332
-                        && loc.longitude >= 39.864674 && loc.longitude <= 39.912254) {
+                if (loc.latitude >= locations.returnBounds(place)[0].longitude && loc.latitude <= locations.returnBounds(place)[1].longitude
+                        && loc.longitude >= locations.returnBounds(place)[0].latitude && loc.longitude <= locations.returnBounds(place)[1].latitude) {
                     gMap.addMarker(myLoc.position(loc));
                     if (gMap != null)
                         gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 15));
@@ -147,7 +163,7 @@ public class RotaTask {
     }
 
     protected void showPath() {
-        GraphMaker.makeGraph(context);
+        GraphMaker.makeGraph(context, place);
         GraphMaker.nodes = new ArrayList<>(GraphMaker.readNodeMapping.values());
         Vertex source = GraphMaker.nodes.get(0);
         Vertex destination = GraphMaker.nodes.get(GraphMaker.nodes.size()-1);

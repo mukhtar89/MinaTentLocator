@@ -30,7 +30,7 @@ public class DialogWebConnect {
             public void onClick(DialogInterface dialog, int which) {
                 //context.startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
                 builderWebSelect.setTitle("No Internet!");
-                builderWebSelect.setMessage("Thejas News detected that your system is not connected to Internet.");
+                builderWebSelect.setMessage("Mina Tent Locator detected that your system is not connected to Internet.");
                 builderWebSelect.setCancelable(true);
                 builderWebSelect.setPositiveButton(R.string.dialog_wifi, new DialogInterface.OnClickListener() {
                     @Override

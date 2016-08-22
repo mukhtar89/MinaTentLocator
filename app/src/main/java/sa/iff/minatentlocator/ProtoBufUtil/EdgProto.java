@@ -558,11 +558,7 @@ public final class EdgProto {
             
             return false;
           }
-          if (!hasLng()) {
-            
-            return false;
-          }
-          return true;
+          return hasLng();
         }
 
         public Builder mergeFrom(
@@ -1012,11 +1008,7 @@ public final class EdgProto {
           
           return false;
         }
-        if (!getDestination().isInitialized()) {
-          
-          return false;
-        }
-        return true;
+        return getDestination().isInitialized();
       }
 
       public Builder mergeFrom(

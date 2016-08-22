@@ -32,8 +32,9 @@ public class GetFilesWeb extends AsyncTask<String, Void, Boolean> {
     private TextView distance, estTime;
     private DialogWebConnect dialogWebConnect;
     private NetworkInfo activeNetworkInfo;
+    private String place;
 
-    public GetFilesWeb(Context context, GoogleMap gMap, String editFrom, String editTo, TextView distance, TextView estTime) {
+    public GetFilesWeb(Context context, GoogleMap gMap, String editFrom, String editTo, TextView distance, TextView estTime, String place) {
         this.context = context;
         path = this.context.getExternalFilesDir(null);
         this.gMap = gMap;
@@ -41,6 +42,7 @@ public class GetFilesWeb extends AsyncTask<String, Void, Boolean> {
         this.editTo = editTo;
         this.distance = distance;
         this.estTime = estTime;
+        this.place = place;
         progressMeta = new ProgressDialog(this.context);
         dialogWebConnect = new DialogWebConnect(this.context);
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -57,8 +59,8 @@ public class GetFilesWeb extends AsyncTask<String, Void, Boolean> {
         try {
             InputStream inputVertex = new URL(params[0]).openStream();
             InputStream inputEdge = new URL(params[1]).openStream();
-            File fileVertex = new File(path, "vertexes.ser");
-            File fileEdge = new File(path, "edges.ser");
+            File fileVertex = new File(path, "vertexes_" + place + ".ser");
+            File fileEdge = new File(path, "edges_" + place + ".ser");
             FileOutputStream streamVertex = new FileOutputStream(fileVertex);
             FileOutputStream streamEdge = new FileOutputStream(fileEdge);
             int read = 0;
@@ -92,9 +94,9 @@ public class GetFilesWeb extends AsyncTask<String, Void, Boolean> {
         progressMeta.dismiss();
         if (!editFrom.equals("myloc")) {
             if (result)
-                new RotaTask(context, gMap, editFrom, editTo).execute(distance, estTime);
+                new RotaTask(context, gMap, editFrom, editTo, place).execute(distance, estTime);
         }
         else
-            new RotaTask(context, gMap, editTo, editTo).execute(distance, estTime);
+            new RotaTask(context, gMap, editTo, editTo, place).execute(distance, estTime);
     }
 }

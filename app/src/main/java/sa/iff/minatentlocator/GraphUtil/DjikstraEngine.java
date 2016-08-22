@@ -75,9 +75,8 @@ public class DjikstraEngine {
 
     private Vertex getMinimum(Set<Vertex> unVisitedNodes) {
         Vertex minimum = null, temp;
-        Iterator<Vertex> iter = unVisitedNodes.iterator();
-        while(iter.hasNext()) {
-            temp = iter.next();
+        for (Vertex unVisitedNode : unVisitedNodes) {
+            temp = unVisitedNode;
             if (minimum == null)
                 minimum = temp;
             else if (getShortestDistance(minimum) > getShortestDistance(temp))

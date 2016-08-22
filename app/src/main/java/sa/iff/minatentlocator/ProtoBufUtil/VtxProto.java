@@ -397,11 +397,7 @@ public final class VtxProto {
           
           return false;
         }
-        if (!hasLng()) {
-          
-          return false;
-        }
-        return true;
+        return hasLng();
       }
 
       public Builder mergeFrom(

@@ -29,12 +29,12 @@ public class GraphMaker {
 	public static Hashtable<LatLng, Vertex> nodeMapping = new Hashtable<>();
 	public static Hashtable<Vertex[], Edge> edgeMapping = new Hashtable<>();
 
-	public static List<Vertex> readNodes;
+	public static List<Vertex> readNodes = new ArrayList<>();
 	public static List<Edge> readEdges = new ArrayList<>();
 	public static Hashtable<LatLng, Vertex> readNodeMapping = new Hashtable<>();
 
 	private static File path;
-	
+
 	public static synchronized void add (LatLng point, LatLng neighbour) {
 		Vertex tempPoint = null, tempNeighbour = null;
 		if (point != null) {
@@ -54,16 +54,16 @@ public class GraphMaker {
 				edges.add(new Edge(tempPoint, tempNeighbour));
 	}
 
-	public static Graph makeGraph(Context context) {
+	public static Graph makeGraph(Context context, String place) {
 		nodes = new ArrayList<>(nodeMapping.values());
 		path = context.getExternalFilesDir(null);
 		try {
-			graph = readGraph();
-			//saveGraph();
+			graph = readGraph(place);
+			saveGraph(place);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		//graph = new Graph(nodes, edges);
+		graph = new Graph(nodes, edges);
 		return graph;
 	}
 
@@ -83,8 +83,8 @@ public class GraphMaker {
 		return nearest;
 	}
 
-	public static void saveGraph() throws IOException {
-		File fileVertex = new File(path, "vertexes_final.ser");
+	public static void saveGraph(String place) throws IOException {
+		File fileVertex = new File(path, "vertexes_final_" + place + ".ser");
 		FileOutputStream streamVertex = new FileOutputStream(fileVertex);
 		streamVertex.flush();
 		Integer offsetVertex;
@@ -110,7 +110,7 @@ public class GraphMaker {
 		}
 		streamVertex.close();
 
-		File fileEdge = new File(path, "edges_final.ser");
+		File fileEdge = new File(path, "edges_final_" + place + ".ser");
 		FileOutputStream streamEdge = new FileOutputStream(fileEdge);
 		Integer offsetEdge;
 		for (Edge edge : edges) {
@@ -155,8 +155,8 @@ public class GraphMaker {
 		streamEdge.close();
 	}
 
-	public static Graph readGraph() throws IOException {
-		File fileVertex = new File(path, "vertexes.ser");
+	public static Graph readGraph(String place) throws IOException {
+		File fileVertex = new File(path, "vertexes_" + place + ".ser");
 		FileInputStream streamVertex = new FileInputStream(fileVertex);
 		Integer fileVertexSize = (int) fileVertex.length();
 		byte[] BufferVertex = new byte[fileVertexSize];
@@ -176,7 +176,7 @@ public class GraphMaker {
 		}
 		streamVertex.close();
 
-		File fileEdge = new File(path, "edges.ser");
+		File fileEdge = new File(path, "edges_" + place + ".ser");
 		FileInputStream streamEdge = new FileInputStream(fileEdge);
 		Integer offsetEdge = 0, currentEdge = 0;
 		Integer fileEdgeSize = (int) fileEdge.length();
