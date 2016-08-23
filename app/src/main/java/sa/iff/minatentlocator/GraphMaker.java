@@ -59,11 +59,11 @@ public class GraphMaker {
 		path = context.getExternalFilesDir(null);
 		try {
 			graph = readGraph(place);
-			saveGraph(place);
+			//saveGraph(place);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		graph = new Graph(nodes, edges);
+		//graph = new Graph(nodes, edges);
 		return graph;
 	}
 
@@ -84,7 +84,7 @@ public class GraphMaker {
 	}
 
 	public static void saveGraph(String place) throws IOException {
-		File fileVertex = new File(path, "vertexes_final_" + place + ".ser");
+		File fileVertex = new File(path, "vertexes_fin_" + place + ".ser");
 		FileOutputStream streamVertex = new FileOutputStream(fileVertex);
 		streamVertex.flush();
 		Integer offsetVertex;
@@ -110,7 +110,7 @@ public class GraphMaker {
 		}
 		streamVertex.close();
 
-		File fileEdge = new File(path, "edges_final_" + place + ".ser");
+		File fileEdge = new File(path, "edges_fin_" + place + ".ser");
 		FileOutputStream streamEdge = new FileOutputStream(fileEdge);
 		Integer offsetEdge;
 		for (Edge edge : edges) {

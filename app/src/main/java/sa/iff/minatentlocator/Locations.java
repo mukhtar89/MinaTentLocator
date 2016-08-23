@@ -30,8 +30,14 @@ public class Locations {
         csv_files.put("Aziziyah", "aziziyah_locations.csv");
         locMin.put("Mina", new LatLng(21.398361, 39.864674));
         locMax.put("Mina", new LatLng(21.430332, 39.912254));
+        locMin.put("Aziziyah", new LatLng(21.383519, 39.843803));
+        locMax.put("Aziziyah", new LatLng(21.424618, 39.886822));
+        locMin.put("Makkah", new LatLng(21.381307, 39.759305));
+        locMax.put("Makkah", new LatLng(21.476456, 39.848789));
         //urlFiles.put("Mina", new String[]{"vertexex", "edges"});
         urlFiles.put("Mina", new String[]{"https://goo.gl/ST0qjS", "https://goo.gl/XukhhN"});
+        urlFiles.put("Aziziyah", new String[]{"https://goo.gl/e8eoaZ", "https://goo.gl/DyDqwl"});
+        urlFiles.put("Makkah", new String[]{"https://goo.gl/Fk0wVU", "https://goo.gl/jbclZR"});
     }
 
     public Hashtable<String, String[]> parseLocations(String place) throws IOException {

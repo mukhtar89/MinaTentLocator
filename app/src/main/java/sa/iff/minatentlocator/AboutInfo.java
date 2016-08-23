@@ -22,9 +22,9 @@ public class AboutInfo extends AlertDialog {
 
     public void showDialog () throws PackageManager.NameNotFoundException {
         aboutInfo = new Builder(context);
-        aboutInfo.setTitle("About Mina Tent Locator");
+        aboutInfo.setTitle("About Hajj Navigator");
         aboutInfo.setIcon(R.drawable.tent_logo);
-        aboutInfo.setMessage("Mina Tent Locator v" + packageManager.getPackageInfo(context.getPackageName(), 0).versionName +
+        aboutInfo.setMessage("Hajj Navigator v" + packageManager.getPackageInfo(context.getPackageName(), 0).versionName +
                 "\n\n\tApp Created by Mohammed Mukhtar" +
                 "\n\tFor Intermedia Publishing Co.");
         aboutInfo.setCancelable(true);

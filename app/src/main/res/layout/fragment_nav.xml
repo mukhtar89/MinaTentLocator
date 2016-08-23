@@ -122,13 +122,13 @@
                         android:layout_weight="1"
                         android:textColor="#000000" />
 
-                    <AutoCompleteTextView
+                    <sa.iff.minatentlocator.InstantAutoComplete
                         android:text=""
                         android:hint="Example: 1/162"
                         android:textColor="@android:color/primary_text_light"
                         android:id="@+id/auto_from"
-                        android:lines="1"
-                        android:maxLines="1"
+                        android:lines="2"
+                        android:maxLines="2"
                         android:textSize="18sp"
                         android:layout_gravity="top"
                         android:paddingRight="20dp"
@@ -229,13 +229,13 @@
                         android:layout_weight="1"
                         android:textColor="#000000" />
 
-                    <AutoCompleteTextView
+                    <sa.iff.minatentlocator.InstantAutoComplete
                         android:text=""
                         android:hint="Example: 1/162"
                         android:textColor="@android:color/primary_text_light"
                         android:id="@+id/auto_to"
-                        android:lines="1"
-                        android:maxLines="1"
+                        android:lines="2"
+                        android:maxLines="2"
                         android:textSize="18sp"
                         android:layout_gravity="top"
                         android:paddingRight="70dp"

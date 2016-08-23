@@ -1,12 +1,16 @@
 package sa.iff.minatentlocator.Activities;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,12 +29,13 @@ import sa.iff.minatentlocator.ProtoBufUtil.GetFilesWeb;
 import sa.iff.minatentlocator.R;
 import sa.iff.minatentlocator.RotaTask;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private Context context;
     private TextView distance, estTime;
     private Locations locations;
+    private String place, editFrom, editTo;
 
 
     @Override
@@ -40,6 +45,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         locations = new Locations(this);
+
+        place = getIntent().getStringExtra("PLACE");
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle(place + " Navigation");
     }
 
     @Override
@@ -96,6 +108,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setZoomControlsEnabled(true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        mMap.getUiSettings().setCompassEnabled(true);
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
     }
 
@@ -103,42 +117,72 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         if (mMap == null) {
             mMap = googleMap;
+            context = this;
+            setUpMap();
             distance = (TextView) findViewById(R.id.distance);
             estTime = (TextView) findViewById(R.id.esttime);
-            context = this;
-            final String editFrom = getIntent().getStringExtra("FROM");
-            final String editTo = getIntent().getStringExtra("TO");
-            final String place = getIntent().getStringExtra("PLACE");
-            /*getExternalFilesDir(null);
+            editFrom = getIntent().getStringExtra("FROM");
+            editTo = getIntent().getStringExtra("TO");
+            getExternalFilesDir(null);
             try {
                 ArrayList<String> metaFiles = new ArrayList<>(Arrays.asList(getExternalFilesDir(null).list()));
-                if (!metaFiles.contains("vertexes_"+place+".ser"))
+                if (!metaFiles.contains("vertexes_" + place + ".ser"))
                     new GetFilesWeb(this, mMap, editFrom, editTo, distance, estTime, place).execute(locations.returnUrls(place)[0], locations.returnUrls(place)[1]);
                 else {
                     if (editFrom.equals("myloc")) {
+                        locationCheck(getMyLocation());
                         mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
                             @Override
                             public void onMyLocationChange(Location location) {
-                                LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
-                                if (loc.latitude >= locations.returnBounds(place)[0].latitude && loc.latitude <= locations.returnBounds(place)[1].latitude
-                                        && loc.longitude >= locations.returnBounds(place)[0].longitude && loc.longitude <= locations.returnBounds(place)[1].longitude) {
-                                    String locString = loc.latitude + "," + loc.longitude;
-                                    new RotaTask(context, mMap, locString, editTo, place).execute(distance, estTime);
-                                } else {
-                                    Toast.makeText(context, "You are not in " + place + ". Directions cannot be calculated", Toast.LENGTH_LONG).show();
-                                    Intent intentMain = new Intent(MapsActivity.this, MainActivity.class);
-                                    finish();
-                                    startActivity(intentMain);
-                                }
+                                locationCheck(location);
                             }
                         });
-                    } else new RotaTask(this, mMap, editFrom, editTo, place).execute(distance, estTime);
+                    } else
+                        new RotaTask(this, mMap, editFrom, editTo, place).execute(distance, estTime);
                 }
             } catch (NullPointerException e) {
                 e.printStackTrace();
-            }*/
-            new GetPathPoints(this, mMap, editFrom, editTo, place).execute();
-            setUpMapIfNeeded();
+            }
+            //new GetPathPoints(this, mMap, editFrom, editTo, place).execute();
         }
+    }
+
+    public void locationCheck(Location location) {
+        if (location != null) {
+            LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
+            if (loc.latitude >= locations.returnBounds(place)[0].latitude && loc.latitude <= locations.returnBounds(place)[1].latitude
+                    && loc.longitude >= locations.returnBounds(place)[0].longitude && loc.longitude <= locations.returnBounds(place)[1].longitude) {
+                String locString = loc.latitude + "," + loc.longitude;
+                new RotaTask(context, mMap, locString, editTo, place).execute(distance, estTime);
+            } else {
+                Toast.makeText(context, "You are not in " + place + ". Directions cannot be calculated", Toast.LENGTH_LONG).show();
+                Intent intentMain = new Intent(MapsActivity.this, MainActivity.class);
+                finish();
+                startActivity(intentMain);
+            }
+        }
+        else {
+            Toast.makeText(context, "Cannot detect your location because Access to your Location is Denied", Toast.LENGTH_LONG).show();
+            Intent intentMain = new Intent(MapsActivity.this, MainActivity.class);
+            finish();
+            startActivity(intentMain);
+        }
+    }
+
+    private Location getMyLocation() {
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        Location location = null;
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return location;
+        }
+        location = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+        return location;
     }
 }

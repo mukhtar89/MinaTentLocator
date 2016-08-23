@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -113,8 +114,26 @@ public class NavFragment extends Fragment {
             ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(context, R.layout.spinner_item, categoryList);
             listCategoryTo.setAdapter(categoryAdapter);
             listCategoryFrom.setAdapter(categoryAdapter);
+            if (place.equals("Mina")) {
+                listCategoryFrom.setSelection(6);
+                listCategoryTo.setSelection(6);
+            }
             editFrom = (AutoCompleteTextView) rootView.findViewById(R.id.auto_from);
             editTo = (AutoCompleteTextView) rootView.findViewById(R.id.auto_to);
+            editFrom.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    editFrom.showDropDown();
+                    return false;
+                }
+            });
+            editTo.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    editTo.showDropDown();
+                    return false;
+                }
+            });
             listCategoryFrom.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {

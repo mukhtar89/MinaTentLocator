@@ -2,6 +2,7 @@ package sa.iff.minatentlocator.Activities;
 
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -94,13 +95,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
         tabLayout.setupWithViewPager(viewPager);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-            }
-        });
     }
 
     /*public void onFABClick(View view) {
@@ -187,9 +181,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         break;
                     case R.id.nav_manage: viewPager.setCurrentItem(0);
                         break;
-                    case R.id.nav_share: viewPager.setCurrentItem(0);
+                    case R.id.nav_send: Intent sendIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", "muhammad.28.1989@gmail.com", null));
+                        sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Feedback on Hajj Navigator App");
+                        startActivity(Intent.createChooser(sendIntent, "Send email..."));
                         break;
-                    case R.id.nav_send: viewPager.setCurrentItem(0);
+                    case R.id.nav_share: String url = "https://play.google.com/store/apps/details?id=sa.iff.minatentlocator";
+                        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                        shareIntent.setType("text/plain");
+                        shareIntent.putExtra(Intent.EXTRA_TEXT, "This app is a must if you are going for Hajj: " + url);
+                        startActivity(shareIntent);
                         break;
                     case R.id.nav_about: try {
                                     aboutInfo.showDialog();
