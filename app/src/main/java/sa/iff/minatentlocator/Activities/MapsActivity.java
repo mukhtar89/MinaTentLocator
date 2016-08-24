@@ -11,6 +11,10 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,8 +24,14 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 
 import sa.iff.minatentlocator.GetPathPoints;
 import sa.iff.minatentlocator.Locations;
@@ -33,25 +43,64 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private Context context;
-    private TextView distance, estTime;
+    private TextView distance, estTime, from;
+    private Spinner toList;
     private Locations locations;
-    private String place, editFrom, editTo;
+    private String place, editFrom, editTo, editFromLabel, editToLabel;
+    private RotaTask rotaTask = null;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        context = this;
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         locations = new Locations(this);
 
         place = getIntent().getStringExtra("PLACE");
+        editFromLabel = getIntent().getStringExtra("FROM_LABEL");
+        editToLabel = getIntent().getStringExtra("TO_LABEL");
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle(place + " Navigation");
+
+        from = (TextView) findViewById(R.id.map_from);
+        from.setText(editFromLabel);
+        toList = (Spinner) findViewById(R.id.map_list_category_to);
+        final Hashtable<String, String[]> returnLocations;
+        final Object[] locationList;
+        final ArrayList<String> destList;
+        try {
+            returnLocations = locations.parseLocations(place);
+            locationList = returnLocations.keySet().toArray();
+            destList = new ArrayList<>(Arrays.asList(Arrays.copyOf(locationList, locationList.length, String[].class)));
+            destList.remove(editFromLabel);
+            Collections.sort(destList);
+            ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(this, R.layout.spinner_item_map, destList);
+            toList.setAdapter(categoryAdapter);
+            toList.setSelection(destList.indexOf(editToLabel));
+            toList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                boolean initialDest = true;
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    if (rotaTask != null && !initialDest) {
+                        editToLabel = destList.get(position);
+                        rotaTask.executeDestination(distance, estTime, returnLocations.get(destList.get(position))[0], editToLabel);
+                    }
+                    else if(!initialDest)
+                        Toast.makeText(context, "Sorry, cannot show the directions now, please go back and try again.", Toast.LENGTH_LONG).show();
+                    initialDest = false;
+                }
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) { }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -127,7 +176,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             try {
                 ArrayList<String> metaFiles = new ArrayList<>(Arrays.asList(getExternalFilesDir(null).list()));
                 if (!metaFiles.contains("vertexes_" + place + ".ser"))
-                    new GetFilesWeb(this, mMap, editFrom, editTo, distance, estTime, place).execute(locations.returnUrls(place)[0], locations.returnUrls(place)[1]);
+                    new GetFilesWeb(this, mMap, editFrom, editTo, distance, estTime, place, editFromLabel, editToLabel).execute(locations.returnUrls(place)[0], locations.returnUrls(place)[1]);
                 else {
                     if (editFrom.equals("myloc")) {
                         locationCheck(getMyLocation());
@@ -137,8 +186,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 locationCheck(location);
                             }
                         });
-                    } else
-                        new RotaTask(this, mMap, editFrom, editTo, place).execute(distance, estTime);
+                    } else {
+                        rotaTask = new RotaTask(this, mMap, editFrom, editTo, place, editFromLabel, editToLabel);
+                        rotaTask.execute(distance, estTime);
+                    }
                 }
             } catch (NullPointerException e) {
                 e.printStackTrace();
@@ -153,7 +204,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (loc.latitude >= locations.returnBounds(place)[0].latitude && loc.latitude <= locations.returnBounds(place)[1].latitude
                     && loc.longitude >= locations.returnBounds(place)[0].longitude && loc.longitude <= locations.returnBounds(place)[1].longitude) {
                 String locString = loc.latitude + "," + loc.longitude;
-                new RotaTask(context, mMap, locString, editTo, place).execute(distance, estTime);
+                rotaTask = new RotaTask(this, mMap, editFrom, editTo, place, editFromLabel, editToLabel);
+                rotaTask.execute(distance, estTime);
             } else {
                 Toast.makeText(context, "You are not in " + place + ". Directions cannot be calculated", Toast.LENGTH_LONG).show();
                 Intent intentMain = new Intent(MapsActivity.this, MainActivity.class);

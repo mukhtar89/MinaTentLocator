@@ -14,6 +14,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 
 import sa.iff.minatentlocator.DialogWebConnect;
 import sa.iff.minatentlocator.RotaTask;
@@ -21,25 +22,27 @@ import sa.iff.minatentlocator.RotaTask;
 /**
  * Created by Mukhtar on 9/18/2015.
  */
-public class GetFilesWeb extends AsyncTask<String, Void, Boolean> {
+public class GetFilesWeb extends AsyncTask<String, Integer, Boolean> {
 
     private Context context;
     private File path;
     private GoogleMap gMap;
-    private String editFrom;
-    private String editTo;
+    private String editFrom, editFromLabel;
+    private String editTo, editToLabel;
     private ProgressDialog progressMeta;
     private TextView distance, estTime;
     private DialogWebConnect dialogWebConnect;
     private NetworkInfo activeNetworkInfo;
     private String place;
 
-    public GetFilesWeb(Context context, GoogleMap gMap, String editFrom, String editTo, TextView distance, TextView estTime, String place) {
+    public GetFilesWeb(Context context, GoogleMap gMap, String editFrom, String editTo, TextView distance, TextView estTime, String place, String editFromLabel, String editToLabel) {
         this.context = context;
         path = this.context.getExternalFilesDir(null);
         this.gMap = gMap;
         this.editFrom = editFrom;
+        this.editFromLabel = editFromLabel;
         this.editTo = editTo;
+        this.editToLabel = editToLabel;
         this.distance = distance;
         this.estTime = estTime;
         this.place = place;
@@ -57,20 +60,29 @@ public class GetFilesWeb extends AsyncTask<String, Void, Boolean> {
     @Override
     protected Boolean doInBackground(String... params) {
         try {
-            InputStream inputVertex = new URL(params[0]).openStream();
-            InputStream inputEdge = new URL(params[1]).openStream();
+            URL urlVertex = new URL(params[0]), urlEdge = new URL(params[1]);
+            URLConnection connectionVertex = urlVertex.openConnection();
+            URLConnection connectionEdge = urlVertex.openConnection();
+            int lenVertex = connectionVertex.getContentLength();
+            int lenEdge = connectionEdge.getContentLength();
+            InputStream inputVertex = urlVertex.openStream();
+            InputStream inputEdge = urlEdge.openStream();
             File fileVertex = new File(path, "vertexes_" + place + ".ser");
             File fileEdge = new File(path, "edges_" + place + ".ser");
             FileOutputStream streamVertex = new FileOutputStream(fileVertex);
             FileOutputStream streamEdge = new FileOutputStream(fileEdge);
-            int read = 0;
+            int read = 0, total = 0;
             byte[] bytes = new byte[4096];
             while ((read = inputVertex.read(bytes)) != -1) {
                 streamVertex.write(bytes, 0, read);
+                total+=read;
+                publishProgress((total*100)/(lenVertex+lenEdge));
             }
             bytes = new byte[4096];
             while ((read = inputEdge.read(bytes)) != -1) {
                 streamEdge.write(bytes, 0, read);
+                total+=read;
+                publishProgress((total*100)/(lenVertex+lenEdge));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -83,7 +95,10 @@ public class GetFilesWeb extends AsyncTask<String, Void, Boolean> {
     protected void onPreExecute() {
         super.onPreExecute();
         progressMeta.setTitle("Downloading Metadata");
-        progressMeta.setMessage("Initial downloading of Map Directions Metadata");
+        progressMeta.setMessage("Initial downloading of Map Directions Metadata. Please wait...");
+        progressMeta.setIndeterminate(false);
+        progressMeta.setMax(100);
+        progressMeta.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         progressMeta.setCancelable(false);
         progressMeta.show();
     }
@@ -94,9 +109,15 @@ public class GetFilesWeb extends AsyncTask<String, Void, Boolean> {
         progressMeta.dismiss();
         if (!editFrom.equals("myloc")) {
             if (result)
-                new RotaTask(context, gMap, editFrom, editTo, place).execute(distance, estTime);
+                new RotaTask(context, gMap, editFrom, editTo, place, editFromLabel, editToLabel).execute(distance, estTime);
         }
         else
-            new RotaTask(context, gMap, editTo, editTo, place).execute(distance, estTime);
+            new RotaTask(context, gMap, editTo, editTo, place, editFromLabel, editToLabel).execute(distance, estTime);
+    }
+
+    @Override
+    protected void onProgressUpdate(Integer... values) {
+        super.onProgressUpdate(values);
+        progressMeta.setProgress(values[0]);
     }
 }

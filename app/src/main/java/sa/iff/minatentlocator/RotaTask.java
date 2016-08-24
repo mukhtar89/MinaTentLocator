@@ -16,6 +16,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
@@ -35,19 +36,22 @@ public class RotaTask {
     private static final String TOAST_MSG = "Sorry, No route found...!!";
     private Context context;
     private GoogleMap gMap;
-    private String editFrom;
-    private String editTo;
+    private String editFrom, editFromLabel;
+    private String editTo, editToLabel;
     private DjikstraEngine engine;
     public ProgressDialog progressEngine;
     private static MapsActivity parent;
     private Locations locations;
     private String place;
+    private Graph graph = null;
 
-    public RotaTask(final Context context, final GoogleMap gMap, final String editFrom, final String editTo, String place) {
+    public RotaTask(final Context context, final GoogleMap gMap, final String editFrom, final String editTo, String place,String editFromLabel, String editToLabel) {
         this.context = context;
         this.gMap = gMap;
         this.editFrom = editFrom;
         this.editTo = editTo;
+        this.editFromLabel = editFromLabel;
+        this.editToLabel = editToLabel;
         this.place = place;
         progressEngine = new ProgressDialog(this.context);
         locations = new Locations(context);
@@ -75,7 +79,6 @@ public class RotaTask {
 
             @Override
             protected PolylineOptions doInBackground(Void... params) {
-                Graph graph = null;
                 while (graph == null)
                     graph = GraphMaker.makeGraph(context, place);
                 engine = new DjikstraEngine(graph);
@@ -114,16 +117,20 @@ public class RotaTask {
             protected void onPostExecute(PolylineOptions polylines) {
                 super.onPostExecute(polylines);
                 progressEngine.dismiss();
-                final MarkerOptions markerA = new MarkerOptions();
-                markerA.position(source);
-                markerA.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-                final MarkerOptions markerB = new MarkerOptions();
-                markerB.position(destination);
-                markerB.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                final MarkerOptions markerAoptions = new MarkerOptions();
+                markerAoptions.position(source)
+                        .title("Origin: " + editFromLabel)
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                Marker markerA = gMap.addMarker(markerAoptions);
+                markerA.showInfoWindow();
+                final MarkerOptions markerBOptions = new MarkerOptions();
+                markerBOptions.position(destination)
+                                .title("Destination: " + editToLabel)
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                Marker markerB = gMap.addMarker(markerBOptions);
+                markerB.showInfoWindow();
                 gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(source, 15));
-                gMap.addMarker(markerA);
                 gMap.addPolyline(polylines);
-                gMap.addMarker(markerB);
                 double dist = 0;
                 LatLng temp = null;
                 for (LatLng point : polylines.getPoints()) {
@@ -132,8 +139,111 @@ public class RotaTask {
                     temp = point;
                 }
                 double time = dist / (1.4 * 60);
-                distance.setText("Distance: " + (int) dist + " meters");
-                estTime.setText("Avg Time: " + (int) time + " minutes");
+                distance.setText("(" + (int) dist + " m)");
+                estTime.setText((int) time + " min");
+            }
+        }.execute();
+        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        gMap.setMyLocationEnabled(true);
+        final MarkerOptions myLoc = new MarkerOptions();
+        gMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+            @Override
+            public void onMyLocationChange(Location location) {
+                LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
+                if (loc.latitude >= locations.returnBounds(place)[0].longitude && loc.latitude <= locations.returnBounds(place)[1].longitude
+                        && loc.longitude >= locations.returnBounds(place)[0].latitude && loc.longitude <= locations.returnBounds(place)[1].latitude) {
+                    gMap.addMarker(myLoc.position(loc));
+                    if (gMap != null)
+                        gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 15));
+                }
+            }
+        });
+    }
+
+    public void executeDestination(final TextView distance, final TextView estTime, final String newDestin, final String newEditToLabel) {
+        final PolylineOptions polylines = new PolylineOptions();
+        final Handler handler = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                if (msg.arg1 == 1)
+                    Toast.makeText(context, TOAST_MSG, Toast.LENGTH_LONG).show();
+                return false;
+            }
+        });
+        new AsyncTask<Void, Void, PolylineOptions>() {
+            LatLng source = getLatLng(editFrom.replace(" ", ""));
+            LatLng newDestination = getLatLng(newDestin);
+
+            @Override
+            protected PolylineOptions doInBackground(Void... params) {
+                polylines.color(Color.BLUE);
+                if (engine.getPath(GraphMaker.getNearestNode(newDestination)) == null) {
+                    final Message msg = new Message();
+                    new Thread() {
+                        public void run() {
+                            msg.arg1 = 1;
+                            handler.sendMessage(msg);
+                        }
+                    }.start();
+                    polylines.add(source);
+                    polylines.add(newDestination);
+                } else {
+                    polylines.add(source);
+                    for (final Vertex nodes : engine.getPath(GraphMaker.getNearestNode(newDestination))) {
+                        polylines.add(nodes.getCoordinates());
+                    }
+                    polylines.add(newDestination);
+                }
+                return polylines;
+            }
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                progressEngine.setTitle("Calculating route");
+                progressEngine.setMessage("Please wait while calculating route for different Destination....");
+                progressEngine.setCancelable(false);
+                progressEngine.show();
+            }
+
+            @Override
+            protected void onPostExecute(PolylineOptions polylines) {
+                super.onPostExecute(polylines);
+                progressEngine.dismiss();
+                gMap.clear();
+                final MarkerOptions markerAoptions = new MarkerOptions();
+                markerAoptions.position(source)
+                        .title("Origin: " + editFromLabel)
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                Marker markerA = gMap.addMarker(markerAoptions);
+                markerA.showInfoWindow();
+                final MarkerOptions markerBOptions = new MarkerOptions();
+                markerBOptions.position(newDestination)
+                        .title("Destination: " + newEditToLabel)
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                Marker markerB = gMap.addMarker(markerBOptions);
+                markerB.showInfoWindow();
+                gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(source, 15));
+                gMap.addPolyline(polylines);
+                double dist = 0;
+                LatLng temp = null;
+                for (LatLng point : polylines.getPoints()) {
+                    if (temp != null)
+                        dist += SphericalUtil.computeDistanceBetween(temp, point);
+                    temp = point;
+                }
+                double time = dist / (1.4 * 60);
+                distance.setText("(" + (int) dist + " m)");
+                estTime.setText((int) time + " min");
             }
         }.execute();
         if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {

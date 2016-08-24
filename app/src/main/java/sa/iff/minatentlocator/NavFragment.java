@@ -191,14 +191,18 @@ public class NavFragment extends Fragment {
                 /** * {@inheritDoc} */
                 @Override
                 public void onClick(final View v) {
-                    if (!radioChecked && !locationList.containsKey(editFrom.getText().toString())) {
+                    if (!radioChecked && !locationList.containsKey(editFrom.getText().toString()))
                         Toast.makeText(context, "Enter the starting point", Toast.LENGTH_SHORT).show();
-                    } else if (!locationList.containsKey(editTo.getText().toString())) {
+                    else if (!locationList.containsKey(editTo.getText().toString()))
                         Toast.makeText(context, "Enter the destination point", Toast.LENGTH_SHORT).show();
-                    } else {
+                    else if (editFrom.getText().toString().equals(editTo.getText().toString()))
+                        Toast.makeText(context, "Origin and Destination cannot be same", Toast.LENGTH_SHORT).show();
+                    else {
                         final Intent intent = new Intent(context, MapsActivity.class);
                         intent.putExtra("FROM", radioChecked? "myloc" : locationList.get(editFrom.getText().toString())[0]);
                         intent.putExtra("TO", locationList.get(editTo.getText().toString())[0]);
+                        intent.putExtra("FROM_LABEL", radioChecked? "My Location" : editFrom.getText().toString());
+                        intent.putExtra("TO_LABEL", editTo.getText().toString());
                         intent.putExtra("PLACE", place);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         context.startActivity(intent);

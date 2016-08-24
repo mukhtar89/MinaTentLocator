@@ -35,7 +35,7 @@
         android:textSize="30dp"
         android:textColor="#FFFFFF"
         android:gravity="center_horizontal"
-        android:text="India Fraternrity Forum, KSA"
+        android:text="India Fraternity Forum, KSA"
         android:layout_below="@+id/textView2"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"

@@ -129,7 +129,7 @@ public class GetPathPoints {
         }
         else if (count == places.size()){
             Toast.makeText(context, TOAST_MSG, Toast.LENGTH_LONG).show();
-            new RotaTask(context, gMap, editTo, editFrom, place).showPath();
+            new RotaTask(context, gMap, editTo, editFrom, place, null, null).showPath();
         }
     }
 }
