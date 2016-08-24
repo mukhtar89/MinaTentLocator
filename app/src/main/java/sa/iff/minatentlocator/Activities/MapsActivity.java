@@ -1,14 +1,12 @@
 package sa.iff.minatentlocator.Activities;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -28,12 +26,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Map;
 
-import sa.iff.minatentlocator.GetPathPoints;
+import sa.iff.minatentlocator.LocationPermission;
 import sa.iff.minatentlocator.Locations;
 import sa.iff.minatentlocator.ProtoBufUtil.GetFilesWeb;
 import sa.iff.minatentlocator.R;
@@ -48,6 +43,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Locations locations;
     private String place, editFrom, editTo, editFromLabel, editToLabel;
     private RotaTask rotaTask = null;
+    private LocationPermission locationPermission;
 
 
     @Override
@@ -58,6 +54,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         locations = new Locations(this);
+        locationPermission = new LocationPermission(context, MapsActivity.this);
 
         place = getIntent().getStringExtra("PLACE");
         editFromLabel = getIntent().getStringExtra("FROM_LABEL");
@@ -145,16 +142,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
      */
     private void setUpMap() {
         mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
-        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setZoomControlsEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
@@ -203,7 +190,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
             if (loc.latitude >= locations.returnBounds(place)[0].latitude && loc.latitude <= locations.returnBounds(place)[1].latitude
                     && loc.longitude >= locations.returnBounds(place)[0].longitude && loc.longitude <= locations.returnBounds(place)[1].longitude) {
-                String locString = loc.latitude + "," + loc.longitude;
                 rotaTask = new RotaTask(this, mMap, editFrom, editTo, place, editFromLabel, editToLabel);
                 rotaTask.execute(distance, estTime);
             } else {
@@ -221,20 +207,27 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private Location getMyLocation() {
-        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        Location location = null;
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return location;
+    public Location getMyLocation() {
+        final LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        final Location[] location = new Location[1];
+        if (locationPermission.checkLocationPermission())
+            location[0] = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+        else {
+            final Handler handlerLocation = new Handler(new Handler.Callback() {
+                @Override
+                public boolean handleMessage(Message msg) {
+                    if (msg.arg1 == 1) {
+                        if (locationPermission.checkLocationPermission())
+                            location[0] = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+                    }
+                    else location[0] = null;
+                    return false;
+                }
+            });
+            locationPermission.getLocationPermission(handlerLocation);
         }
-        location = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
-        return location;
+        return location[0];
     }
+
+
 }

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
@@ -49,19 +51,17 @@ public class NavFragment extends Fragment {
     private static Locations locations;
     private Hashtable<String, String[]> locationList;
     private String place;
-    private Toolbar toolbar;
-    private TabLayout tabLayout;
     private Context context;
     private Integer initialToastTo, initialToastFrom;
 
     public static RadioButton myLocButton;
     public static boolean radioChecked;
     private Spinner listCategoryTo, listCategoryFrom;
-    private CardView fromView, ToView;
     private ArrayList<String> poleNumbersFrom, poleNumbersTo;
     private ArrayAdapter<String> locationAdapter;
 
     private OnFragmentInteractionListener mListener;
+    private LocationPermission locationPermission;
 
     public NavFragment() {
         // Required empty public constructor
@@ -97,9 +97,8 @@ public class NavFragment extends Fragment {
     public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_nav, container, false);
-        toolbar = ((MainActivity)this.getActivity()).getToolbar();
-        tabLayout = ((MainActivity)this.getActivity()).getTabLayout();
         context = getActivity().getApplicationContext();
+        locationPermission = new LocationPermission(context, getActivity());
         radioChecked = false;
 
         try {
@@ -179,9 +178,6 @@ public class NavFragment extends Fragment {
                 }
             });
 
-
-
-            fromView = (CardView) rootView.findViewById(R.id.from_card);
             category_row = (TableRow) rootView.findViewById(R.id.category_row);
             place_row = (TableRow) rootView.findViewById(R.id.place_row);
             myLocButton = (RadioButton) rootView.findViewById(R.id.my_loc_button);
@@ -197,15 +193,27 @@ public class NavFragment extends Fragment {
                         Toast.makeText(context, "Enter the destination point", Toast.LENGTH_SHORT).show();
                     else if (editFrom.getText().toString().equals(editTo.getText().toString()))
                         Toast.makeText(context, "Origin and Destination cannot be same", Toast.LENGTH_SHORT).show();
+                    else if (radioChecked && !locationPermission.checkLocationPermission()) {
+                        final Handler handlerLocation = new Handler(new Handler.Callback() {
+                            @Override
+                            public boolean handleMessage(Message msg) {
+                                if (msg.arg1 == 1) {
+                                    if (locationPermission.checkLocationPermission())
+                                        getMaps();
+                                }
+                                else Toast.makeText(context, "Cannot detect your location because Access to your Location is Denied"
+                                        , Toast.LENGTH_SHORT).show();
+                                return false;
+                            }
+                        });
+                        locationPermission.getLocationPermission(handlerLocation);
+                        /*if (locationPermission.checkLocationPermission())
+                            getMaps();
+                        else Toast.makeText(context, "Cannot detect your location because Access to your Location is Denied"
+                                , Toast.LENGTH_SHORT).show();*/
+                    }
                     else {
-                        final Intent intent = new Intent(context, MapsActivity.class);
-                        intent.putExtra("FROM", radioChecked? "myloc" : locationList.get(editFrom.getText().toString())[0]);
-                        intent.putExtra("TO", locationList.get(editTo.getText().toString())[0]);
-                        intent.putExtra("FROM_LABEL", radioChecked? "My Location" : editFrom.getText().toString());
-                        intent.putExtra("TO_LABEL", editTo.getText().toString());
-                        intent.putExtra("PLACE", place);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        context.startActivity(intent);
+                        getMaps();
                     }
                 }
             });
@@ -213,6 +221,17 @@ public class NavFragment extends Fragment {
             e.printStackTrace();
         }
         return rootView;
+    }
+
+    private void getMaps() {
+        final Intent intent = new Intent(context, MapsActivity.class);
+        intent.putExtra("FROM", radioChecked? "myloc" : locationList.get(editFrom.getText().toString())[0]);
+        intent.putExtra("TO", locationList.get(editTo.getText().toString())[0]);
+        intent.putExtra("FROM_LABEL", radioChecked? "My Location" : editFrom.getText().toString());
+        intent.putExtra("TO_LABEL", editTo.getText().toString());
+        intent.putExtra("PLACE", place);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
     }
 
     /*public void fabOnClick() {
