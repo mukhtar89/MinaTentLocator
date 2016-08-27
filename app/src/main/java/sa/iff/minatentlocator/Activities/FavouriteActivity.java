@@ -1,18 +1,17 @@
 package sa.iff.minatentlocator.Activities;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ExpandableListView;
-import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.Toast;
+import android.widget.LinearLayout;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +25,7 @@ public class FavouriteActivity extends AppCompatActivity {
 
     ExpandableListAdapter listAdapter;
     ExpandableListView expListView;
+    private LinearLayout favListItem;
     List<String> listDataHeader;
     HashMap<String, List<String>> listDataChild;
     private SharedPreferences sharedPreferences;
@@ -54,10 +54,10 @@ public class FavouriteActivity extends AppCompatActivity {
            expListView.expandGroup(i, true);
         expListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
-            public boolean onChildClick(ExpandableListView parent, View v, final int groupPosition, final int childPosition, long id) {
-                itemDeleteButton.setOnClickListener(new View.OnClickListener() {
+            public boolean onChildClick(ExpandableListView parent, final View listView, final int groupPosition, final int childPosition, long id) {
+                /*itemDeleteButton.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(View v) {
+                    public void onClick(final View v) {*/
                         String place = null;
                         switch(groupPosition) {
                             case 0: place = "Mina";
@@ -68,21 +68,54 @@ public class FavouriteActivity extends AppCompatActivity {
                                     break;
                         }
                         sharedPrefArrayUtils = new SharedPrefArrayUtils(sharedPreferences, place);
-                        ArrayList<String> favPlaces = sharedPrefArrayUtils.loadArray();
-                        favPlaces.remove(childPosition);
-                        sharedPrefArrayUtils.saveArray(favPlaces);
-                        prepareListData();
-                        listAdapter = new ExpandableListAdapter(context, listDataHeader, listDataChild);
-                        expListView.setAdapter(listAdapter);
+                        final ArrayList<String> favPlaces = sharedPrefArrayUtils.loadArray();
+                        final SharedPreferences.Editor sharedPrefEditor = sharedPreferences.edit();
+                        sharedPrefEditor.remove("graph_" + place + "_" + favPlaces.get(childPosition));
+                        listView.setVisibility(View.GONE);
                         expListView.refreshDrawableState();
-                        Snackbar.make(v, "Undo Delete Favourite item", Snackbar.LENGTH_LONG)
-                                .setAction("UNDO", new View.OnClickListener() {
+
+                        final Handler deleteHandler = new Handler(new Handler.Callback() {
+                            @Override
+                            public boolean handleMessage(Message msg) {
+                                if (msg.arg1 != 0) {
+                                    favPlaces.remove(childPosition);
+                                    sharedPrefArrayUtils.saveArray(favPlaces);
+                                    sharedPrefEditor.apply();
+
+                                    prepareListData();
+                                    listAdapter = new ExpandableListAdapter(context, listDataHeader, listDataChild);
+                                    expListView.setAdapter(listAdapter);
+                                    expListView.refreshDrawableState();
+                                    for (int i=0; i<listDataHeader.size(); i++)
+                                        expListView.expandGroup(i, true);
+                                }
+                                else listView.setVisibility(View.VISIBLE);
+                                return false;
+                            }
+                        });
+
+                        Snackbar undoDelete = Snackbar.make(listView, "Undo Delete \"" + favPlaces.get(childPosition) + "\"", Snackbar.LENGTH_LONG);
+                        undoDelete.setAction("UNDO", new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
+                                        Message msg = new Message();
+                                        msg.arg1 = 0;
+                                        deleteHandler.sendMessage(msg);
                                     }
                                 }).show();
-                    }
-                });
+                        undoDelete.setCallback(new Snackbar.Callback() {
+                            @Override
+                            public void onDismissed(Snackbar snackbar, int event) {
+                                super.onDismissed(snackbar, event);
+                                if (event != DISMISS_EVENT_ACTION) {
+                                    Message msg = new Message();
+                                    msg.arg1 = 1;
+                                    deleteHandler.sendMessage(msg);
+                                }
+                            }
+                        });
+                    /*}
+                });*/
                 return false;
             }
         });
