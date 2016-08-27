@@ -97,22 +97,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         tabLayout.setupWithViewPager(viewPager);
     }
 
-    /*public void onFABClick(View view) {
-        NavFragment Mina, Makkah, Aziziyah;
-        Mina = (NavFragment) navPageAdapter.getItem(0);
-        Aziziyah = (NavFragment) navPageAdapter.getItem(2);
-        FragmentManager fragmentManager= getSupportFragmentManager();
-        if (fragmentManager.getFragments().get(viewPager.getCurrentItem()) instanceof navPageAdapter.getItem(0)) {
-            //if (Mina!= null) {
-                Mina.fabOnClick();
-            //}
-        } else if (fragmentManager.getFragments().get(viewPager.getCurrentItem()).equals(Aziziyah)) {
-            if (Aziziyah!= null) {
-                Aziziyah.fabOnClick();
-            }
-        }
-    }*/
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -197,6 +181,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     e.printStackTrace();
                                 }
                         break;
+                    case R.id.nav_favourites: Intent favIntent = new Intent(MainActivity.this, FavouriteActivity.class);
+                        startActivity(favIntent);
+                        break;
                     default: break;
 
                 }
@@ -207,21 +194,5 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onFragmentInteraction(Uri uri) {
-
-    }
-
-    public void onRadioButtonClicked (View view) {
-        boolean stateChecked = NavFragment.radioChecked;
-        NavFragment.radioChecked = ((RadioButton) view).isChecked();
-        if (!stateChecked && NavFragment.category_row.getVisibility() == View.VISIBLE) {
-            NavFragment.category_row.setVisibility(View.GONE);
-            NavFragment.place_row.setVisibility(View.GONE);
-        }
-        else if (stateChecked && NavFragment.category_row.getVisibility() == View.GONE) {
-            NavFragment.myLocButton.setChecked(false);
-            NavFragment.radioChecked = false;
-            NavFragment.category_row.setVisibility(View.VISIBLE);
-            NavFragment.place_row.setVisibility(View.VISIBLE);
-        }
     }
 }

@@ -14,8 +14,8 @@ import java.util.Set;
  */
 public class DjikstraEngine {
 
-    private final List<Vertex> nodes;
-    private final List<Edge> edges;
+    private List<Vertex> nodes;
+    private List<Edge> edges;
     private Set<Vertex> visitedNodes, unVisitedNodes;
     private Map<Vertex, Vertex> predecessors;
     private Map<Vertex, Double> distance;
@@ -109,5 +109,19 @@ public class DjikstraEngine {
         }
         Collections.reverse(path);
         return path;
+    }
+
+    public List<Vertex> getNodes () {
+        return nodes;
+    }
+
+    public void setNodes(List<Vertex> nodes) { this.nodes = nodes;}
+
+    public Map<Vertex, Vertex> getPredecessors() {
+        return predecessors;
+    }
+
+    public void setPredecessors(Map<Vertex, Vertex> predecessors) {
+        this.predecessors = predecessors;
     }
 }

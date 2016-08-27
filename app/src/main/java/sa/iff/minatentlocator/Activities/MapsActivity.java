@@ -2,11 +2,15 @@ package sa.iff.minatentlocator.Activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -33,6 +37,7 @@ import sa.iff.minatentlocator.Locations;
 import sa.iff.minatentlocator.ProtoBufUtil.GetFilesWeb;
 import sa.iff.minatentlocator.R;
 import sa.iff.minatentlocator.RotaTask;
+import sa.iff.minatentlocator.SharedPrefArrayUtils;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -42,8 +47,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Spinner toList;
     private Locations locations;
     private String place, editFrom, editTo, editFromLabel, editToLabel;
+    public static boolean favourite;
     private RotaTask rotaTask = null;
     private LocationPermission locationPermission;
+    private SharedPreferences sharedPreferences;
+    private SharedPrefArrayUtils sharedPrefArrayUtils;
+    private CoordinatorLayout coordinatorLayout;
+    private Snackbar snackbarSetFavourite;
 
 
     @Override
@@ -59,6 +69,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         place = getIntent().getStringExtra("PLACE");
         editFromLabel = getIntent().getStringExtra("FROM_LABEL");
         editToLabel = getIntent().getStringExtra("TO_LABEL");
+        favourite = getIntent().getBooleanExtra("FAV", false);
+
+        sharedPreferences = getSharedPreferences("Favourite_Management", Context.MODE_PRIVATE);
+        sharedPrefArrayUtils = new SharedPrefArrayUtils(sharedPreferences, place);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -86,15 +100,29 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                     if (rotaTask != null && !initialDest) {
                         editToLabel = destList.get(position);
-                        rotaTask.executeDestination(distance, estTime, returnLocations.get(destList.get(position))[0], editToLabel);
+                        rotaTask.executeDestination(distance, estTime, returnLocations.get(destList.get(position))[0], editToLabel, null);
                     }
                     else if(!initialDest)
                         Toast.makeText(context, "Sorry, cannot show the directions now, please go back and try again.", Toast.LENGTH_LONG).show();
                     initialDest = false;
                 }
                 @Override
-                public void onNothingSelected(AdapterView<?> parent) { }
+                public void onNothingSelected(AdapterView<?> parent) {  }
             });
+            coordinatorLayout = (CoordinatorLayout) findViewById(R.id.snackbar_layout);
+            snackbarSetFavourite = Snackbar.make(coordinatorLayout, "Do you want to save the map based on Origin to your Favourites?", Snackbar.LENGTH_INDEFINITE);
+            snackbarSetFavourite.setAction("SAVE", new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                if (rotaTask != null) {
+                                                    ArrayList<String> favPlaces = sharedPrefArrayUtils.loadArray();
+                                                    favPlaces.add(editFromLabel);
+                                                    sharedPrefArrayUtils.saveArray(favPlaces);
+                                                    rotaTask.saveGraphSource(sharedPreferences);
+                                                }
+                                            }
+                                        })
+                                .setActionTextColor(Color.YELLOW);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -160,26 +188,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             editFrom = getIntent().getStringExtra("FROM");
             editTo = getIntent().getStringExtra("TO");
             getExternalFilesDir(null);
-            try {
-                ArrayList<String> metaFiles = new ArrayList<>(Arrays.asList(getExternalFilesDir(null).list()));
-                if (!metaFiles.contains("vertexes_" + place + ".ser"))
-                    new GetFilesWeb(this, mMap, editFrom, editTo, distance, estTime, place, editFromLabel, editToLabel).execute(locations.returnUrls(place)[0], locations.returnUrls(place)[1]);
-                else {
-                    if (editFrom.equals("myloc")) {
-                        locationCheck(getMyLocation());
-                        mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
-                            @Override
-                            public void onMyLocationChange(Location location) {
-                                locationCheck(location);
-                            }
-                        });
-                    } else {
-                        rotaTask = new RotaTask(this, mMap, editFrom, editTo, place, editFromLabel, editToLabel);
-                        rotaTask.execute(distance, estTime);
-                    }
+            ArrayList<String> metaFiles = new ArrayList<>(Arrays.asList(getExternalFilesDir(null).list()));
+            if (!metaFiles.contains("vertexes_" + place + ".ser"))
+                new GetFilesWeb(this, mMap, editFrom, editTo, distance, estTime, place, editFromLabel, editToLabel, snackbarSetFavourite).execute(locations.returnUrls(place)[0], locations.returnUrls(place)[1]);
+            else {
+                if (editFrom.equals("myloc")) {
+                    locationCheck(getMyLocation());
+                    mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+                        @Override
+                        public void onMyLocationChange(Location location) {
+                            locationCheck(location);
+                        }
+                    });
+                } else {
+                    rotaTask = new RotaTask(this, mMap, editFrom, editTo, place, editFromLabel, editToLabel, snackbarSetFavourite);
+                    if (!favourite) rotaTask.execute(distance, estTime);
+                    else rotaTask.executeDestination(distance, estTime, editTo, editToLabel, sharedPreferences);
                 }
-            } catch (NullPointerException e) {
-                e.printStackTrace();
             }
             //new GetPathPoints(this, mMap, editFrom, editTo, place).execute();
         }
@@ -190,7 +215,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
             if (loc.latitude >= locations.returnBounds(place)[0].latitude && loc.latitude <= locations.returnBounds(place)[1].latitude
                     && loc.longitude >= locations.returnBounds(place)[0].longitude && loc.longitude <= locations.returnBounds(place)[1].longitude) {
-                rotaTask = new RotaTask(this, mMap, editFrom, editTo, place, editFromLabel, editToLabel);
+                rotaTask = new RotaTask(this, mMap, editFrom, editTo, place, editFromLabel, editToLabel, snackbarSetFavourite);
                 rotaTask.execute(distance, estTime);
             } else {
                 Toast.makeText(context, "You are not in " + place + ". Directions cannot be calculated", Toast.LENGTH_LONG).show();

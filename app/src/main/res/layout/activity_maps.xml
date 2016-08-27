@@ -35,7 +35,7 @@
                     android:layout_span="1"
                     android:layout_weight="1"
                     android:id="@+id/map_from_label"
-                    android:textSize="15dp"
+                    android:textSize="15sp"
                     android:text="From: "
                     android:textColor="#FFFFFF"
                     android:gravity="center_vertical" />
@@ -47,7 +47,7 @@
                     android:layout_weight="4"
                     android:background="#073987"
                     android:id="@+id/map_from"
-                    android:textSize="13dp"
+                    android:textSize="15sp"
                     android:padding="10dp"
                     android:layout_marginRight="30dp"
                     android:textColor="#FFFFFF" />
@@ -64,7 +64,7 @@
                     android:layout_weight="1"
                     android:layout_span="1"
                     android:id="@+id/map_to_label"
-                    android:textSize="15dp"
+                    android:textSize="15sp"
                     android:text="To: "
 
                     android:textColor="#FFFFFF"
@@ -72,7 +72,7 @@
 
                 <Spinner
                     android:id="@+id/map_list_category_to"
-                    android:textSize="15dp"
+                    android:textSize="15sp"
                     android:layout_span="4"
                     android:layout_weight="4"
                     android:layout_marginRight="30dp"
@@ -86,10 +86,10 @@
 
     <fragment
         android:layout_width="fill_parent"
-        android:layout_height="461dp"
+        android:layout_height="0dp"
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_weight="1.03" />
+        android:layout_weight="1" />
 
     <GridLayout
         android:layout_width="fill_parent"
@@ -141,5 +141,12 @@
             android:textColor="@android:color/holo_blue_dark" />
 
     </GridLayout>
+
+    <android.support.design.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/snackbar_layout">
+
+    </android.support.design.widget.CoordinatorLayout>
 
 </LinearLayout>

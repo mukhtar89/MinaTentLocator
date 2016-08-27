@@ -2,13 +2,13 @@ package sa.iff.minatentlocator;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.pm.PackageManager;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.app.ActivityCompat;
+import android.support.design.widget.Snackbar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,11 +19,14 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.DomDriver;
 
 import java.util.ArrayList;
 
 import sa.iff.minatentlocator.Activities.MapsActivity;
 import sa.iff.minatentlocator.GraphUtil.DjikstraEngine;
+import sa.iff.minatentlocator.GraphUtil.FavouritePredecessors;
 import sa.iff.minatentlocator.GraphUtil.Graph;
 import sa.iff.minatentlocator.GraphUtil.Vertex;
 import sa.iff.minatentlocator.MapUtils.SphericalUtil;
@@ -44,8 +47,11 @@ public class RotaTask {
     private Locations locations;
     private String place;
     private Graph graph = null;
+    private Snackbar snackbar;
+    private XStream xStream;
+    private FavouritePredecessors favouritePredecessors;
 
-    public RotaTask(final Context context, final GoogleMap gMap, final String editFrom, final String editTo, String place,String editFromLabel, String editToLabel) {
+    public RotaTask(final Context context, final GoogleMap gMap, final String editFrom, final String editTo, String place, String editFromLabel, String editToLabel, Snackbar snackbarSetFavourite) {
         this.context = context;
         this.gMap = gMap;
         this.editFrom = editFrom;
@@ -55,6 +61,9 @@ public class RotaTask {
         this.place = place;
         progressEngine = new ProgressDialog(this.context);
         locations = new Locations(context);
+        this.snackbar = snackbarSetFavourite;
+        xStream = new XStream(new DomDriver());
+        favouritePredecessors = new FavouritePredecessors();
     }
 
     public LatLng getLatLng(String location) {
@@ -141,18 +150,18 @@ public class RotaTask {
                 double time = dist / (1.4 * 60);
                 distance.setText("(" + (int) dist + " m)");
                 estTime.setText((int) time + " min");
+                if (!MapsActivity.favourite) {
+                    snackbar.show();
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            snackbar.dismiss();
+                        }
+                    },7000);
+                }
             }
         }.execute();
-        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
         gMap.setMyLocationEnabled(true);
         final MarkerOptions myLoc = new MarkerOptions();
         gMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
@@ -169,7 +178,7 @@ public class RotaTask {
         });
     }
 
-    public void executeDestination(final TextView distance, final TextView estTime, final String newDestin, final String newEditToLabel) {
+    public void executeDestination(final TextView distance, final TextView estTime, final String newDestin, final String newEditToLabel, final SharedPreferences sharedPreferences) {
         final PolylineOptions polylines = new PolylineOptions();
         final Handler handler = new Handler(new Handler.Callback() {
             @Override
@@ -185,8 +194,11 @@ public class RotaTask {
 
             @Override
             protected PolylineOptions doInBackground(Void... params) {
+                if (sharedPreferences != null)
+                    readGraphSource(sharedPreferences);
                 polylines.color(Color.BLUE);
-                if (engine.getPath(GraphMaker.getNearestNode(newDestination)) == null) {
+                Vertex destin = getNode(newDestination);
+                if (engine.getPath(destin) == null) {
                     final Message msg = new Message();
                     new Thread() {
                         public void run() {
@@ -198,7 +210,7 @@ public class RotaTask {
                     polylines.add(newDestination);
                 } else {
                     polylines.add(source);
-                    for (final Vertex nodes : engine.getPath(GraphMaker.getNearestNode(newDestination))) {
+                    for (final Vertex nodes : engine.getPath(destin)) {
                         polylines.add(nodes.getCoordinates());
                     }
                     polylines.add(newDestination);
@@ -209,8 +221,14 @@ public class RotaTask {
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                progressEngine.setTitle("Calculating route");
-                progressEngine.setMessage("Please wait while calculating route for different Destination....");
+                if (MapsActivity.favourite){
+                    progressEngine.setTitle("Loading route");
+                    progressEngine.setMessage("Please wait while loading route....");
+                }
+                else{
+                    progressEngine.setTitle("Calculating route");
+                    progressEngine.setMessage("Please wait while calculating route for different Destination....");
+                }
                 progressEngine.setCancelable(false);
                 progressEngine.show();
             }
@@ -244,18 +262,18 @@ public class RotaTask {
                 double time = dist / (1.4 * 60);
                 distance.setText("(" + (int) dist + " m)");
                 estTime.setText((int) time + " min");
+                if (!MapsActivity.favourite) {
+                    snackbar.show();
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            snackbar.dismiss();
+                        }
+                    },7000);
+                }
             }
         }.execute();
-        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
         gMap.setMyLocationEnabled(true);
         final MarkerOptions myLoc = new MarkerOptions();
         gMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
@@ -291,6 +309,38 @@ public class RotaTask {
             marker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
             gMap.addMarker(marker);
         }
+    }
+
+    public void saveGraphSource(SharedPreferences sharedPreferences)  {
+        favouritePredecessors.setPredecessors(engine.getPredecessors());
+        favouritePredecessors.setNodes(engine.getNodes());
+        String xml = xStream.toXML(favouritePredecessors);
+        MapsActivity.favourite = true;
+        SharedPreferences.Editor sharedPrefEditor = sharedPreferences.edit();
+        sharedPrefEditor.putString("graph_" + place + "_" + editFromLabel, xml);
+        sharedPrefEditor.apply();
+    }
+
+    public void readGraphSource(SharedPreferences sharedPreferences)  {
+        String xml = sharedPreferences.getString("graph_" + place + "_" + editFromLabel, null);
+        favouritePredecessors = (FavouritePredecessors) xStream.fromXML(xml);
+        while (graph == null)
+            graph = GraphMaker.makeGraph(context, place);
+        engine = new DjikstraEngine(graph);
+        engine.setPredecessors(favouritePredecessors.getPredecessors());
+        engine.setNodes(favouritePredecessors.getNodes());
+    }
+
+    private Vertex getNode(LatLng point) {
+        Double distance = Double.MAX_VALUE;
+        Vertex pointNode = null;
+        for (Vertex vertex : engine.getNodes()) {
+            if (distance > SphericalUtil.computeDistanceBetween(vertex.getCoordinates(), point)) {
+                distance = SphericalUtil.computeDistanceBetween(vertex.getCoordinates(), point);
+                pointNode = vertex;
+            }
+        }
+        return pointNode;
     }
 }
 

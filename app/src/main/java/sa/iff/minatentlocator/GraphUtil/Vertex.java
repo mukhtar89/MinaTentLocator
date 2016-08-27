@@ -2,6 +2,8 @@ package sa.iff.minatentlocator.GraphUtil;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.io.Serializable;
+
 /**
  * Created by Mukhtar on 9/12/2015.
  */

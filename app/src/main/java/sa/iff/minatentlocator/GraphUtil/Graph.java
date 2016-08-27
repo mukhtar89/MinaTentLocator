@@ -1,5 +1,6 @@
 package sa.iff.minatentlocator.GraphUtil;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**

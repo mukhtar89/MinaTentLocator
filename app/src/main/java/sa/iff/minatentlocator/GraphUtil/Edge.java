@@ -1,5 +1,7 @@
 package sa.iff.minatentlocator.GraphUtil;
 
+import java.io.Serializable;
+
 import sa.iff.minatentlocator.MapUtils.SphericalUtil;
 
 /**

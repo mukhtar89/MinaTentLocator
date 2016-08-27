@@ -5,6 +5,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.support.design.widget.Snackbar;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -34,8 +35,9 @@ public class GetFilesWeb extends AsyncTask<String, Integer, Boolean> {
     private DialogWebConnect dialogWebConnect;
     private NetworkInfo activeNetworkInfo;
     private String place;
+    private Snackbar snackbarSetFavourite;
 
-    public GetFilesWeb(Context context, GoogleMap gMap, String editFrom, String editTo, TextView distance, TextView estTime, String place, String editFromLabel, String editToLabel) {
+    public GetFilesWeb(Context context, GoogleMap gMap, String editFrom, String editTo, TextView distance, TextView estTime, String place, String editFromLabel, String editToLabel, Snackbar snackbar) {
         this.context = context;
         path = this.context.getExternalFilesDir(null);
         this.gMap = gMap;
@@ -46,6 +48,7 @@ public class GetFilesWeb extends AsyncTask<String, Integer, Boolean> {
         this.distance = distance;
         this.estTime = estTime;
         this.place = place;
+        this.snackbarSetFavourite = snackbar;
         progressMeta = new ProgressDialog(this.context);
         dialogWebConnect = new DialogWebConnect(this.context);
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -109,10 +112,10 @@ public class GetFilesWeb extends AsyncTask<String, Integer, Boolean> {
         progressMeta.dismiss();
         if (!editFrom.equals("myloc")) {
             if (result)
-                new RotaTask(context, gMap, editFrom, editTo, place, editFromLabel, editToLabel).execute(distance, estTime);
+                new RotaTask(context, gMap, editFrom, editTo, place, editFromLabel, editToLabel, snackbarSetFavourite).execute(distance, estTime);
         }
         else
-            new RotaTask(context, gMap, editTo, editTo, place, editFromLabel, editToLabel).execute(distance, estTime);
+            new RotaTask(context, gMap, editTo, editTo, place, editFromLabel, editToLabel, snackbarSetFavourite).execute(distance, estTime);
     }
 
     @Override
