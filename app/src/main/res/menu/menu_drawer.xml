@@ -16,7 +16,7 @@
             android:title="Aziziyah" />
         <item
             android:id="@+id/nav_favourites"
-            android:icon="@drawable/star_filled_24"
+            android:icon="@drawable/ic_star_rate_black_18dp"
             android:title="Favourites" />
     </group>
 
@@ -29,15 +29,15 @@
                 android:title="Share App" />
             <item
                 android:id="@+id/nav_send"
-                android:icon="@drawable/ic_menu_send"
+                android:icon="@drawable/ic_rate_review_black_18dp"
                 android:title="Send Feedback" />
             <item
                 android:id="@+id/nav_manage"
-                android:icon="@drawable/ic_menu_manage"
+                android:icon="@drawable/ic_settings_black_18dp"
                 android:title="Settings" />
             <item
                 android:id="@+id/nav_about"
-                android:icon="@android:drawable/ic_dialog_info"
+                android:icon="@drawable/ic_info_black_18dp"
                 android:title="About" />
         </menu>
     </item>

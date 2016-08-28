@@ -5,5 +5,5 @@
     android:textSize="15sp"
     android:gravity="left"
     android:textColor="#FFFFFF"
-    android:padding="13dip">
+    android:padding="12dip">
 </TextView>

@@ -11,6 +11,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
+import android.support.multidex.MultiDex;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
@@ -194,5 +195,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onFragmentInteraction(Uri uri) {
+    }
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        MultiDex.install(this);
     }
 }
