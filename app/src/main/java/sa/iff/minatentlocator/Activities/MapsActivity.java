@@ -1,5 +1,6 @@
 package sa.iff.minatentlocator.Activities;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -114,11 +115,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             snackbarSetFavourite.setAction("SAVE", new View.OnClickListener() {
                                             @Override
                                             public void onClick(View v) {
-                                                if (rotaTask != null) {
+                                                try {
                                                     ArrayList<String> favPlaces = sharedPrefArrayUtils.loadArray();
                                                     favPlaces.add(editFromLabel);
                                                     sharedPrefArrayUtils.saveArray(favPlaces);
-                                                    rotaTask.saveGraphSource(sharedPreferences);
+                                                    rotaTask.saveGraphSource(MapsActivity.this);
+                                                } catch (IOException e) {
+                                                    e.printStackTrace();
                                                 }
                                             }
                                         })
@@ -187,24 +190,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             estTime = (TextView) findViewById(R.id.esttime);
             editFrom = getIntent().getStringExtra("FROM");
             editTo = getIntent().getStringExtra("TO");
-            getExternalFilesDir(null);
-            ArrayList<String> metaFiles = new ArrayList<>(Arrays.asList(getExternalFilesDir(null).list()));
-            if (!metaFiles.contains("vertexes_" + place + ".ser"))
-                new GetFilesWeb(this, mMap, editFrom, editTo, distance, estTime, place, editFromLabel, editToLabel, snackbarSetFavourite).execute(locations.returnUrls(place)[0], locations.returnUrls(place)[1]);
-            else {
-                if (editFrom.equals("myloc")) {
-                    locationCheck(getMyLocation());
-                    mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
-                        @Override
-                        public void onMyLocationChange(Location location) {
-                            locationCheck(location);
-                        }
-                    });
-                } else {
-                    rotaTask = new RotaTask(this, mMap, editFrom, editTo, place, editFromLabel, editToLabel, snackbarSetFavourite);
-                    if (!favourite) rotaTask.execute(distance, estTime);
-                    else rotaTask.executeDestination(distance, estTime, editTo, editToLabel, sharedPreferences);
-                }
+            if (editFrom.equals("myloc")) {
+                locationCheck(getMyLocation());
+                mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+                    @Override
+                    public void onMyLocationChange(Location location) {
+                        locationCheck(location);
+                    }
+                });
+            } else {
+                rotaTask = new RotaTask(this, mMap, editFrom, editTo, place, editFromLabel, editToLabel, snackbarSetFavourite);
+                if (!favourite) rotaTask.execute(distance, estTime);
+                else rotaTask.executeDestination(distance, estTime, editTo, editToLabel, sharedPreferences);
             }
             //new GetPathPoints(this, mMap, editFrom, editTo, place).execute();
         }

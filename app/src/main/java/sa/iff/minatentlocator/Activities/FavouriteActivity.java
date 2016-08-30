@@ -13,6 +13,7 @@ import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +33,7 @@ public class FavouriteActivity extends AppCompatActivity {
     private SharedPrefArrayUtils sharedPrefArrayUtils;
     private ImageView itemDeleteButton;
     private Context context;
+    private File path;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +44,7 @@ public class FavouriteActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         context = this;
         sharedPreferences = getSharedPreferences("Favourite_Management", Context.MODE_PRIVATE);
+        path = context.getExternalFilesDir(null);
 
         expListView = (ExpandableListView) findViewById(R.id.fav_exp_list_view);
         itemDeleteButton = (ImageView) findViewById(R.id.fav_list_item_delete);
@@ -58,65 +61,68 @@ public class FavouriteActivity extends AppCompatActivity {
                 /*itemDeleteButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(final View v) {*/
-                        String place = null;
-                        switch(groupPosition) {
-                            case 0: place = "Mina";
-                                break;
-                            case 1: place = "Makkah";
-                                break;
-                            case 2: place = "Aziziyah";
-                                    break;
+                String place = null;
+                switch(groupPosition) {
+                    case 0: place = "Mina";
+                        break;
+                    case 1: place = "Makkah";
+                        break;
+                    case 2: place = "Aziziyah";
+                            break;
+                }
+                sharedPrefArrayUtils = new SharedPrefArrayUtils(sharedPreferences, place);
+                final ArrayList<String> favPlaces = sharedPrefArrayUtils.loadArray();
+                //final SharedPreferences.Editor sharedPrefEditor = sharedPreferences.edit();
+                //sharedPrefEditor.remove("graph_" + place + "_" + favPlaces.get(childPosition));
+                final File readNodes = new File(path, "graph_" + place + "_" + favPlaces.get(childPosition) + "_nodes.csv");
+                final File readMap = new File(path, "graph_" + place + "_" + favPlaces.get(childPosition) + "_map.csv");
+                listView.setVisibility(View.GONE);
+                expListView.refreshDrawableState();
+
+                final Handler deleteHandler = new Handler(new Handler.Callback() {
+                    @Override
+                    public boolean handleMessage(Message msg) {
+                        if (msg.arg1 != 0) {
+                            favPlaces.remove(childPosition);
+                            sharedPrefArrayUtils.saveArray(favPlaces);
+                            //sharedPrefEditor.apply();
+                            readNodes.delete();   readMap.delete();
+
+                            prepareListData();
+                            listAdapter = new ExpandableListAdapter(context, listDataHeader, listDataChild);
+                            expListView.setAdapter(listAdapter);
+                            expListView.refreshDrawableState();
+                            for (int i=0; i<listDataHeader.size(); i++)
+                                expListView.expandGroup(i, true);
                         }
-                        sharedPrefArrayUtils = new SharedPrefArrayUtils(sharedPreferences, place);
-                        final ArrayList<String> favPlaces = sharedPrefArrayUtils.loadArray();
-                        final SharedPreferences.Editor sharedPrefEditor = sharedPreferences.edit();
-                        sharedPrefEditor.remove("graph_" + place + "_" + favPlaces.get(childPosition));
-                        listView.setVisibility(View.GONE);
-                        expListView.refreshDrawableState();
+                        else listView.setVisibility(View.VISIBLE);
+                        return false;
+                    }
+                });
 
-                        final Handler deleteHandler = new Handler(new Handler.Callback() {
+                Snackbar undoDelete = Snackbar.make(listView, "Undo Delete \"" + favPlaces.get(childPosition) + "\"", Snackbar.LENGTH_LONG);
+                undoDelete.setAction("UNDO", new View.OnClickListener() {
                             @Override
-                            public boolean handleMessage(Message msg) {
-                                if (msg.arg1 != 0) {
-                                    favPlaces.remove(childPosition);
-                                    sharedPrefArrayUtils.saveArray(favPlaces);
-                                    sharedPrefEditor.apply();
-
-                                    prepareListData();
-                                    listAdapter = new ExpandableListAdapter(context, listDataHeader, listDataChild);
-                                    expListView.setAdapter(listAdapter);
-                                    expListView.refreshDrawableState();
-                                    for (int i=0; i<listDataHeader.size(); i++)
-                                        expListView.expandGroup(i, true);
-                                }
-                                else listView.setVisibility(View.VISIBLE);
-                                return false;
+                            public void onClick(View v) {
+                                Message msg = new Message();
+                                msg.arg1 = 0;
+                                deleteHandler.sendMessage(msg);
                             }
-                        });
-
-                        Snackbar undoDelete = Snackbar.make(listView, "Undo Delete \"" + favPlaces.get(childPosition) + "\"", Snackbar.LENGTH_LONG);
-                        undoDelete.setAction("UNDO", new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        Message msg = new Message();
-                                        msg.arg1 = 0;
-                                        deleteHandler.sendMessage(msg);
-                                    }
-                                }).show();
-                        undoDelete.setCallback(new Snackbar.Callback() {
-                            @Override
-                            public void onDismissed(Snackbar snackbar, int event) {
-                                super.onDismissed(snackbar, event);
-                                if (event != DISMISS_EVENT_ACTION) {
-                                    Message msg = new Message();
-                                    msg.arg1 = 1;
-                                    deleteHandler.sendMessage(msg);
-                                }
-                            }
-                        });
-                    /*}
-                });*/
-                return false;
+                        }).show();
+                undoDelete.setCallback(new Snackbar.Callback() {
+                    @Override
+                    public void onDismissed(Snackbar snackbar, int event) {
+                        super.onDismissed(snackbar, event);
+                        if (event != DISMISS_EVENT_ACTION) {
+                            Message msg = new Message();
+                            msg.arg1 = 1;
+                            deleteHandler.sendMessage(msg);
+                        }
+                    }
+                });
+            /*}
+        });*/
+        return false;
             }
         });
     }

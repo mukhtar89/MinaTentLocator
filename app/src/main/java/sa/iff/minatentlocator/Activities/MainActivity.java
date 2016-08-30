@@ -1,18 +1,15 @@
 package sa.iff.minatentlocator.Activities;
 
-import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.multidex.MultiDex;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -21,12 +18,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.RadioButton;
 
 import sa.iff.minatentlocator.AboutInfo;
+import sa.iff.minatentlocator.Locations;
 import sa.iff.minatentlocator.NavFragment;
 import sa.iff.minatentlocator.NavPageAdapter;
+import sa.iff.minatentlocator.ProtoBufUtil.GetFilesWeb;
 import sa.iff.minatentlocator.R;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, NavFragment.OnFragmentInteractionListener {

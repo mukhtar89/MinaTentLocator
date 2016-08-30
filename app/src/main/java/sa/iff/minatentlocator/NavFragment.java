@@ -3,11 +3,14 @@ package sa.iff.minatentlocator;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -24,12 +27,15 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import sa.iff.minatentlocator.Activities.MapsActivity;
+import sa.iff.minatentlocator.ProtoBufUtil.GetFilesWeb;
 
 
 /**
@@ -49,9 +55,11 @@ public class NavFragment extends Fragment {
     private Hashtable<String, String[]> locationList;
     private String place, favPlace;
     private Context context;
+    private CoordinatorLayout coordinatorLayout;
 
     public RadioButton myLocButton;
     public boolean radioChecked, favSelected;
+    private AtomicBoolean fileStillDownloading;
     private Spinner listCategoryTo, listCategoryFrom, listFavourites;
     private ArrayList<String> poleNumbersFrom, poleNumbersTo;
     private ArrayAdapter<String> locationAdapter;
@@ -60,6 +68,8 @@ public class NavFragment extends Fragment {
     private LocationPermission locationPermission;
     private SharedPreferences sharedPreferences;
     private SharedPrefArrayUtils sharedPrefArrayUtils;
+    private Handler handleDownloadFinished;
+    private Message msg;
 
     public NavFragment() {
         // Required empty public constructor
@@ -231,6 +241,25 @@ public class NavFragment extends Fragment {
                     fabOnClick();
                 }
             });
+
+            handleDownloadFinished = new Handler(new Handler.Callback() {
+                @Override
+                public boolean handleMessage(Message msg) {
+                    if (msg.arg1 == 1)
+                        fileStillDownloading.set(false);
+                    if (msg.arg1 == 0 && !fileStillDownloading.get())
+                        getMaps();
+                    return false;
+                }
+            });
+            fileStillDownloading = new AtomicBoolean(false);
+            ArrayList<String> metaFiles = new ArrayList<>(Arrays.asList(context.getExternalFilesDir(null).list()));
+            coordinatorLayout = (CoordinatorLayout) rootView.findViewById(R.id.coordinator_layout_fragment);
+            Snackbar snackbarDownloadFinished = Snackbar.make(coordinatorLayout, place + " Map MetaData files download has finished!", Snackbar.LENGTH_SHORT);
+            if (!metaFiles.contains("vertexes_" + place + ".ser")) {
+                new GetFilesWeb(context, place, snackbarDownloadFinished, handleDownloadFinished).execute(locations.returnUrls(place)[0], locations.returnUrls(place)[1]);
+                fileStillDownloading.set(true);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -246,7 +275,7 @@ public class NavFragment extends Fragment {
         intent.putExtra("PLACE", place);
         intent.putExtra("FAV", favSelected);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
+        startActivity(intent);
     }
 
     public void fabOnClick() {
@@ -261,8 +290,29 @@ public class NavFragment extends Fragment {
                 @Override
                 public boolean handleMessage(Message msg) {
                     if (msg.arg1 == 1) {
-                        if (locationPermission.checkLocationPermission())
-                            getMaps();
+                        if (locationPermission.checkLocationPermission()) {
+                            if (!fileStillDownloading.get())
+                                getMaps();
+                            else {
+                                Snackbar snackbarWaitDownload = Snackbar.make(coordinatorLayout, "Please wait until the Map MetaData has been downloaded.", Snackbar.LENGTH_LONG);
+                                snackbarWaitDownload.show();
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        while (fileStillDownloading.get()) {
+                                            try {
+                                                Thread.sleep(5000);
+                                            } catch (InterruptedException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                        Message msg = new Message();
+                                        msg.arg1 = 0;
+                                        handleDownloadFinished.sendMessage(msg);
+                                    }
+                                }).start();
+                            }
+                        }
                     }
                     else Toast.makeText(context, "Cannot detect your location because Access to your Location is Denied"
                             , Toast.LENGTH_SHORT).show();
@@ -275,7 +325,29 @@ public class NavFragment extends Fragment {
                         else Toast.makeText(context, "Cannot detect your location because Access to your Location is Denied"
                                 , Toast.LENGTH_SHORT).show();*/
         }
-        else getMaps();
+        else {
+            if (!fileStillDownloading.get())
+                getMaps();
+            else {
+                Snackbar snackbarWaitDownload = Snackbar.make(coordinatorLayout, "Please wait until the Map MetaData has been downloaded.", Snackbar.LENGTH_LONG);
+                snackbarWaitDownload.show();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (fileStillDownloading.get()) {
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        msg = new Message();
+                        msg.arg1 = 0;
+                        handleDownloadFinished.sendMessage(msg);
+                    }
+                }).start();
+            }
+        }
     }
 
     // TODO: Rename method, update argument and hook method into UI event

@@ -5,10 +5,9 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.Snackbar;
-import android.widget.TextView;
-
-import com.google.android.gms.maps.GoogleMap;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,6 +17,7 @@ import java.net.URL;
 import java.net.URLConnection;
 
 import sa.iff.minatentlocator.DialogWebConnect;
+import sa.iff.minatentlocator.GenerateNotification;
 import sa.iff.minatentlocator.RotaTask;
 
 /**
@@ -27,29 +27,17 @@ public class GetFilesWeb extends AsyncTask<String, Integer, Boolean> {
 
     private Context context;
     private File path;
-    private GoogleMap gMap;
-    private String editFrom, editFromLabel;
-    private String editTo, editToLabel;
-    private ProgressDialog progressMeta;
-    private TextView distance, estTime;
     private DialogWebConnect dialogWebConnect;
     private NetworkInfo activeNetworkInfo;
     private String place;
-    private Snackbar snackbarSetFavourite;
+    private Snackbar snackbar;
+    private Handler handler;
+    private GenerateNotification downloadNotification;
 
-    public GetFilesWeb(Context context, GoogleMap gMap, String editFrom, String editTo, TextView distance, TextView estTime, String place, String editFromLabel, String editToLabel, Snackbar snackbar) {
+    public GetFilesWeb(Context context, String place, Snackbar snackbar, Handler handleDownloadFinished) {
         this.context = context;
         path = this.context.getExternalFilesDir(null);
-        this.gMap = gMap;
-        this.editFrom = editFrom;
-        this.editFromLabel = editFromLabel;
-        this.editTo = editTo;
-        this.editToLabel = editToLabel;
-        this.distance = distance;
-        this.estTime = estTime;
         this.place = place;
-        this.snackbarSetFavourite = snackbar;
-        progressMeta = new ProgressDialog(this.context);
         dialogWebConnect = new DialogWebConnect(this.context);
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
@@ -58,6 +46,10 @@ public class GetFilesWeb extends AsyncTask<String, Integer, Boolean> {
                 dialogWebConnect.show();
         }
         else dialogWebConnect.show();
+
+        this.snackbar = snackbar;
+        this.handler = handleDownloadFinished;
+        downloadNotification = new GenerateNotification(context, place);
     }
 
     @Override
@@ -74,18 +66,26 @@ public class GetFilesWeb extends AsyncTask<String, Integer, Boolean> {
             File fileEdge = new File(path, "edges_" + place + ".ser");
             FileOutputStream streamVertex = new FileOutputStream(fileVertex);
             FileOutputStream streamEdge = new FileOutputStream(fileEdge);
-            int read = 0, total = 0;
+            int read = 0, total = 0, pub = 0;
             byte[] bytes = new byte[4096];
             while ((read = inputVertex.read(bytes)) != -1) {
                 streamVertex.write(bytes, 0, read);
                 total+=read;
-                publishProgress((total*100)/(lenVertex+lenEdge));
+                if (pub < 100) pub++;
+                else {
+                    pub = 0;
+                    publishProgress((total * 100) / (lenVertex + lenEdge));
+                }
             }
             bytes = new byte[4096];
             while ((read = inputEdge.read(bytes)) != -1) {
                 streamEdge.write(bytes, 0, read);
                 total+=read;
-                publishProgress((total*100)/(lenVertex+lenEdge));
+                if (pub < 100) pub++;
+                else {
+                    pub = 0;
+                    publishProgress((total * 100) / (lenVertex + lenEdge));
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -97,30 +97,28 @@ public class GetFilesWeb extends AsyncTask<String, Integer, Boolean> {
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        progressMeta.setTitle("Downloading Metadata");
-        progressMeta.setMessage("Initial downloading of Map Directions Metadata. Please wait...");
-        progressMeta.setIndeterminate(false);
-        progressMeta.setMax(100);
-        progressMeta.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        progressMeta.setCancelable(false);
-        progressMeta.show();
+        downloadNotification.showNotification();
     }
 
     @Override
     protected void onPostExecute(Boolean result) {
         super.onPostExecute(result);
-        progressMeta.dismiss();
-        if (!editFrom.equals("myloc")) {
-            if (result)
-                new RotaTask(context, gMap, editFrom, editTo, place, editFromLabel, editToLabel, snackbarSetFavourite).execute(distance, estTime);
-        }
-        else
-            new RotaTask(context, gMap, editTo, editTo, place, editFromLabel, editToLabel, snackbarSetFavourite).execute(distance, estTime);
+        downloadNotification.completed();
+        snackbar.show();
+        snackbar.setCallback(new Snackbar.Callback() {
+            @Override
+            public void onDismissed(Snackbar snackbar, int event) {
+                super.onDismissed(snackbar, event);
+                Message msg = new Message();
+                msg.arg1 = 1;
+                handler.sendMessage(msg);
+            }
+        });
     }
 
     @Override
     protected void onProgressUpdate(Integer... values) {
         super.onProgressUpdate(values);
-        progressMeta.setProgress(values[0]);
+        downloadNotification.setProgress(values[0]);
     }
 }

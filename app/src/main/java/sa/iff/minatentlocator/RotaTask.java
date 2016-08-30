@@ -1,5 +1,6 @@
 package sa.iff.minatentlocator;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -22,6 +23,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import sa.iff.minatentlocator.Activities.MapsActivity;
@@ -63,7 +65,7 @@ public class RotaTask {
         locations = new Locations(context);
         this.snackbar = snackbarSetFavourite;
         xStream = new XStream(new DomDriver());
-        favouritePredecessors = new FavouritePredecessors();
+        favouritePredecessors = new FavouritePredecessors(context, place, editFromLabel);
     }
 
     public LatLng getLatLng(String location) {
@@ -194,8 +196,11 @@ public class RotaTask {
 
             @Override
             protected PolylineOptions doInBackground(Void... params) {
-                if (sharedPreferences != null)
-                    readGraphSource(sharedPreferences);
+                try {
+                    readGraphSource();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 polylines.color(Color.BLUE);
                 Vertex destin = getNode(newDestination);
                 if (engine.getPath(destin) == null) {
@@ -311,19 +316,21 @@ public class RotaTask {
         }
     }
 
-    public void saveGraphSource(SharedPreferences sharedPreferences)  {
+    public void saveGraphSource(Activity activity) throws IOException {
         favouritePredecessors.setPredecessors(engine.getPredecessors());
         favouritePredecessors.setNodes(engine.getNodes());
-        String xml = xStream.toXML(favouritePredecessors);
+        favouritePredecessors.saveObject(activity);
+        //String xml = xStream.toXML(favouritePredecessors);
         MapsActivity.favourite = true;
-        SharedPreferences.Editor sharedPrefEditor = sharedPreferences.edit();
+        /*SharedPreferences.Editor sharedPrefEditor = sharedPreferences.edit();
         sharedPrefEditor.putString("graph_" + place + "_" + editFromLabel, xml);
-        sharedPrefEditor.apply();
+        sharedPrefEditor.apply();*/
     }
 
-    public void readGraphSource(SharedPreferences sharedPreferences)  {
-        String xml = sharedPreferences.getString("graph_" + place + "_" + editFromLabel, null);
-        favouritePredecessors = (FavouritePredecessors) xStream.fromXML(xml);
+    public void readGraphSource() throws IOException {
+        /*String xml = sharedPreferences.getString("graph_" + place + "_" + editFromLabel, null);
+        favouritePredecessors = (FavouritePredecessors) xStream.fromXML(xml);*/
+        favouritePredecessors = favouritePredecessors.readObject();
         while (graph == null)
             graph = GraphMaker.makeGraph(context, place);
         engine = new DjikstraEngine(graph);
