@@ -99,7 +99,7 @@ public class FavouritePredecessors {
             }
         }
 
-        File saveObjectClassNodes = new File(path, "graph_" + place + "_" + editFromLabel + "_nodes.csv");
+        File saveObjectClassNodes = new File(path, "graph_" + place + "_" + editFromLabel.replaceAll("/","_") + "_nodes.csv");
         FileWriter writerOutputClass = new FileWriter(saveObjectClassNodes);
         BufferedWriter writer = new BufferedWriter(writerOutputClass);
         for (Vertex vtx : getNodes()) {
@@ -109,7 +109,7 @@ public class FavouritePredecessors {
         writer.flush();
         writer.close();
 
-        File saveObjectClassMap= new File(path, "graph_" + place + "_" + editFromLabel + "_map.csv");
+        File saveObjectClassMap= new File(path, "graph_" + place + "_" + editFromLabel.replaceAll("/","_") + "_map.csv");
         writerOutputClass = new FileWriter(saveObjectClassMap);
         writer = new BufferedWriter(writerOutputClass);
         for (Map.Entry<Vertex, Vertex> entry : getPredecessors().entrySet()) {
@@ -128,7 +128,7 @@ public class FavouritePredecessors {
         Hashtable<LatLng, Vertex> nodesSet = new Hashtable<>();
         Map<Vertex, Vertex> predecessorsSet = new HashMap<>();
 
-        File readObjectClassNodes = new File(path, "graph_" + place + "_" + editFromLabel + "_nodes.csv");
+        File readObjectClassNodes = new File(path, "graph_" + place + "_" + editFromLabel.replaceAll("/","_") + "_nodes.csv");
         FileReader readerInputClass = new FileReader(readObjectClassNodes);
         BufferedReader reader = new BufferedReader(readerInputClass);
         String line;
@@ -141,7 +141,7 @@ public class FavouritePredecessors {
             nodesSet.put(coordinates, vtx);
         }
 
-        File readObjectClassMap = new File(path, "graph_" + place + "_" + editFromLabel + "_map.csv");
+        File readObjectClassMap = new File(path, "graph_" + place + "_" + editFromLabel.replaceAll("/","_") + "_map.csv");
         readerInputClass = new FileReader(readObjectClassMap);
         reader = new BufferedReader(readerInputClass);
         while ((line = reader.readLine()) != null) {

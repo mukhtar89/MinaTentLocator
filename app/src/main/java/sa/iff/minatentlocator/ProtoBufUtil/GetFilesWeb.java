@@ -1,5 +1,6 @@
 package sa.iff.minatentlocator.ProtoBufUtil;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -27,8 +28,7 @@ public class GetFilesWeb extends AsyncTask<String, Integer, Boolean> {
 
     private Context context;
     private File path;
-    private DialogWebConnect dialogWebConnect;
-    private NetworkInfo activeNetworkInfo;
+
     private String place;
     private Snackbar snackbar;
     private Handler handler;
@@ -38,15 +38,6 @@ public class GetFilesWeb extends AsyncTask<String, Integer, Boolean> {
         this.context = context;
         path = this.context.getExternalFilesDir(null);
         this.place = place;
-        dialogWebConnect = new DialogWebConnect(this.context);
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        if (activeNetworkInfo != null) {
-            if (!activeNetworkInfo.isConnected())
-                dialogWebConnect.show();
-        }
-        else dialogWebConnect.show();
-
         this.snackbar = snackbar;
         this.handler = handleDownloadFinished;
         downloadNotification = new GenerateNotification(context, place);

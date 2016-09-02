@@ -1,0 +1,16 @@
+<preference-headers
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <header android:fragment="sa.iff.minatentlocator.Activities.SettingsActivity$CategoryPreferenceFragment"
+        android:icon="@drawable/common_full_open_on_phone"
+        android:title="Category Defaults"
+        android:summary="Settings related to Category Defaults" />
+
+    <header android:fragment="sa.iff.minatentlocator.Activities.SettingsActivity$GeneralPreferenceFragment"
+        android:icon="@drawable/common_full_open_on_phone"
+        android:title="General Settings"
+        android:summary="Settings related to general customization">
+    </header>
+
+
+</preference-headers>

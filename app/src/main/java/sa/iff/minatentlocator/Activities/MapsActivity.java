@@ -1,6 +1,5 @@
 package sa.iff.minatentlocator.Activities;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -35,7 +34,6 @@ import java.util.Hashtable;
 
 import sa.iff.minatentlocator.LocationPermission;
 import sa.iff.minatentlocator.Locations;
-import sa.iff.minatentlocator.ProtoBufUtil.GetFilesWeb;
 import sa.iff.minatentlocator.R;
 import sa.iff.minatentlocator.RotaTask;
 import sa.iff.minatentlocator.SharedPrefArrayUtils;
@@ -199,11 +197,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 });
             } else {
-                rotaTask = new RotaTask(this, mMap, editFrom, editTo, place, editFromLabel, editToLabel, snackbarSetFavourite);
-                if (!favourite) rotaTask.execute(distance, estTime);
+                rotaTask = new RotaTask(this, mMap, editFrom, editTo, place, editFromLabel, editToLabel, snackbarSetFavourite, MapsActivity.this);
+                if (!favourite) rotaTask.executeFull(distance, estTime);
                 else rotaTask.executeDestination(distance, estTime, editTo, editToLabel, sharedPreferences);
             }
-            //new GetPathPoints(this, mMap, editFrom, editTo, place).execute();
+            //new GetPathPoints(this, mMap, editFrom, editTo, place).executeFull();
         }
     }
 
@@ -212,8 +210,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
             if (loc.latitude >= locations.returnBounds(place)[0].latitude && loc.latitude <= locations.returnBounds(place)[1].latitude
                     && loc.longitude >= locations.returnBounds(place)[0].longitude && loc.longitude <= locations.returnBounds(place)[1].longitude) {
-                rotaTask = new RotaTask(this, mMap, editFrom, editTo, place, editFromLabel, editToLabel, snackbarSetFavourite);
-                rotaTask.execute(distance, estTime);
+                rotaTask = new RotaTask(this, mMap, editFrom, editTo, place, editFromLabel, editToLabel, snackbarSetFavourite, this);
+                rotaTask.executeFull(distance, estTime);
             } else {
                 Toast.makeText(context, "You are not in " + place + ". Directions cannot be calculated", Toast.LENGTH_LONG).show();
                 Intent intentMain = new Intent(MapsActivity.this, MainActivity.class);

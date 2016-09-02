@@ -28,11 +28,11 @@ public class GenerateNotification {
 
     public void showNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-            notificationBuilder.setContentText("Initial downloading of Map Directions Metadata of " + place);
+            notificationBuilder.setContentText("Downloading Map Directions metadata of " + place);
         else {
-            notificationBuilder.setContentText("Initial downloading of Map Directions Metadata of " + place);
+            notificationBuilder.setContentText("Downloading Map Directions metadata of " + place);
         }
-        notificationBuilder.setContentTitle("Downloading Metadata");
+        notificationBuilder.setContentTitle("Downloading metadata");
         notificationManager.notify(place.charAt(1), notificationBuilder.build());
 
     }
@@ -43,8 +43,8 @@ public class GenerateNotification {
     }
 
     public void completed() {
-        notificationBuilder.setContentTitle("Downloaded Metadata");
-        notificationBuilder.setContentText(place + " Map MetaData Download complete")
+        notificationBuilder.setContentTitle("Downloaded metadata");
+        notificationBuilder.setContentText(place + " Map metadata download complete")
                 .setProgress(0,0,false);
         notificationManager.notify(place.charAt(1), notificationBuilder.build());
     }

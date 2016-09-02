@@ -9,6 +9,7 @@ import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,8 +21,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.xml.DomDriver;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,15 +44,17 @@ public class RotaTask {
     private String editTo, editToLabel;
     private DjikstraEngine engine;
     public ProgressDialog progressEngine;
-    private static MapsActivity parent;
     private Locations locations;
     private String place;
     private Graph graph = null;
     private Snackbar snackbar;
-    private XStream xStream;
     private FavouritePredecessors favouritePredecessors;
+    private LocationPermission locationPermission;
+    private boolean errorFile = false;
+    private Activity activity;
+    private SharedPreferences sharedDefaultPreferences;
 
-    public RotaTask(final Context context, final GoogleMap gMap, final String editFrom, final String editTo, String place, String editFromLabel, String editToLabel, Snackbar snackbarSetFavourite) {
+    public RotaTask(final Context context, final GoogleMap gMap, final String editFrom, final String editTo, String place, String editFromLabel, String editToLabel, Snackbar snackbarSetFavourite, Activity activity) {
         this.context = context;
         this.gMap = gMap;
         this.editFrom = editFrom;
@@ -64,8 +65,10 @@ public class RotaTask {
         progressEngine = new ProgressDialog(this.context);
         locations = new Locations(context);
         this.snackbar = snackbarSetFavourite;
-        xStream = new XStream(new DomDriver());
         favouritePredecessors = new FavouritePredecessors(context, place, editFromLabel);
+        locationPermission = new LocationPermission(context, activity);
+        this.activity = activity;
+        sharedDefaultPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
     public LatLng getLatLng(String location) {
@@ -74,7 +77,7 @@ public class RotaTask {
         return new LatLng(Double.parseDouble(Lat), Double.parseDouble(Lng));
     }
 
-    public void execute(final TextView distance, final TextView estTime) {
+    public void executeFull(final TextView distance, final TextView estTime) {
         final PolylineOptions polylines = new PolylineOptions();
         final Handler handler = new Handler(new Handler.Callback() {
             @Override
@@ -131,13 +134,13 @@ public class RotaTask {
                 final MarkerOptions markerAoptions = new MarkerOptions();
                 markerAoptions.position(source)
                         .title("Origin: " + editFromLabel)
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
                 Marker markerA = gMap.addMarker(markerAoptions);
                 markerA.showInfoWindow();
                 final MarkerOptions markerBOptions = new MarkerOptions();
                 markerBOptions.position(destination)
                                 .title("Destination: " + editToLabel)
-                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
                 Marker markerB = gMap.addMarker(markerBOptions);
                 markerB.showInfoWindow();
                 gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(source, 15));
@@ -150,7 +153,9 @@ public class RotaTask {
                     temp = point;
                 }
                 double time = dist / (1.4 * 60);
-                distance.setText("(" + (int) dist + " m)");
+                if (sharedDefaultPreferences.getBoolean("distance_unit", false))
+                    distance.setText("(" + (int) (dist * 3.28084) + " ft)");
+                else distance.setText("(" + ((int) dist)  + " m)");
                 estTime.setText((int) time + " min");
                 if (!MapsActivity.favourite) {
                     snackbar.show();
@@ -162,8 +167,16 @@ public class RotaTask {
                         }
                     },7000);
                 }
+                if (errorFile)
+                    try {
+                        saveGraphSource(activity);
+                        errorFile = false;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
             }
         }.execute();
+        locationPermission.checkLocationPermission();
         gMap.setMyLocationEnabled(true);
         final MarkerOptions myLoc = new MarkerOptions();
         gMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
@@ -190,6 +203,17 @@ public class RotaTask {
                 return false;
             }
         });
+        final Handler errorFileRead = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                if (msg.arg1 == 1) {
+                    errorFile = true;
+                    progressEngine.dismiss();
+                    executeFull(distance, estTime);
+                }
+                return false;
+            }
+        });
         new AsyncTask<Void, Void, PolylineOptions>() {
             LatLng source = getLatLng(editFrom.replace(" ", ""));
             LatLng newDestination = getLatLng(newDestin);
@@ -199,7 +223,10 @@ public class RotaTask {
                 try {
                     readGraphSource();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    cancel(true);
+                    Message message = new Message();
+                    message.arg1 = 1;
+                    errorFileRead.sendMessage(message);
                 }
                 polylines.color(Color.BLUE);
                 Vertex destin = getNode(newDestination);
@@ -246,13 +273,13 @@ public class RotaTask {
                 final MarkerOptions markerAoptions = new MarkerOptions();
                 markerAoptions.position(source)
                         .title("Origin: " + editFromLabel)
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
                 Marker markerA = gMap.addMarker(markerAoptions);
                 markerA.showInfoWindow();
                 final MarkerOptions markerBOptions = new MarkerOptions();
                 markerBOptions.position(newDestination)
                         .title("Destination: " + newEditToLabel)
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
                 Marker markerB = gMap.addMarker(markerBOptions);
                 markerB.showInfoWindow();
                 gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(source, 15));
@@ -265,7 +292,9 @@ public class RotaTask {
                     temp = point;
                 }
                 double time = dist / (1.4 * 60);
-                distance.setText("(" + (int) dist + " m)");
+                if (sharedDefaultPreferences.getBoolean("distance_unit", false))
+                    distance.setText("(" + (int) (dist * 3.28084) + " ft)");
+                else distance.setText("(" + ((int) dist)  + " m)");
                 estTime.setText((int) time + " min");
                 if (!MapsActivity.favourite) {
                     snackbar.show();
@@ -279,6 +308,7 @@ public class RotaTask {
                 }
             }
         }.execute();
+        locationPermission.checkLocationPermission();
         gMap.setMyLocationEnabled(true);
         final MarkerOptions myLoc = new MarkerOptions();
         gMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
@@ -320,22 +350,19 @@ public class RotaTask {
         favouritePredecessors.setPredecessors(engine.getPredecessors());
         favouritePredecessors.setNodes(engine.getNodes());
         favouritePredecessors.saveObject(activity);
-        //String xml = xStream.toXML(favouritePredecessors);
         MapsActivity.favourite = true;
-        /*SharedPreferences.Editor sharedPrefEditor = sharedPreferences.edit();
-        sharedPrefEditor.putString("graph_" + place + "_" + editFromLabel, xml);
-        sharedPrefEditor.apply();*/
     }
 
-    public void readGraphSource() throws IOException {
-        /*String xml = sharedPreferences.getString("graph_" + place + "_" + editFromLabel, null);
-        favouritePredecessors = (FavouritePredecessors) xStream.fromXML(xml);*/
+    public boolean readGraphSource() throws IOException {
         favouritePredecessors = favouritePredecessors.readObject();
+        if (favouritePredecessors.getNodes().size() < 10)
+            return false;
         while (graph == null)
             graph = GraphMaker.makeGraph(context, place);
         engine = new DjikstraEngine(graph);
         engine.setPredecessors(favouritePredecessors.getPredecessors());
         engine.setNodes(favouritePredecessors.getNodes());
+        return true;
     }
 
     private Vertex getNode(LatLng point) {

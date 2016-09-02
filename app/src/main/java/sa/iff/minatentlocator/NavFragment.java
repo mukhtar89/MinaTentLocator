@@ -4,10 +4,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -66,10 +69,13 @@ public class NavFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
     private LocationPermission locationPermission;
-    private SharedPreferences sharedPreferences;
+    private SharedPreferences sharedPreferences, sharedDefaultPreferences;
     private SharedPrefArrayUtils sharedPrefArrayUtils;
     private Handler handleDownloadFinished;
     private Message msg;
+
+    private static DialogWebConnect dialogWebConnect;
+    private static NetworkInfo activeNetworkInfo;
 
     public NavFragment() {
         // Required empty public constructor
@@ -122,10 +128,13 @@ public class NavFragment extends Fragment {
             ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(context, R.layout.spinner_item, categoryList);
             listCategoryTo.setAdapter(categoryAdapter);
             listCategoryFrom.setAdapter(categoryAdapter);
-            if (place.equals("Mina")) {
-                listCategoryFrom.setSelection(6);
-                listCategoryTo.setSelection(6);
-            }
+
+            sharedDefaultPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+            listCategoryFrom.setSelection(categoryList.indexOf
+                    (sharedDefaultPreferences.getString(place.toLowerCase()+"_cat_from", categoryList.get(0))));
+            listCategoryTo.setSelection(categoryList.indexOf
+                    (sharedDefaultPreferences.getString(place.toLowerCase()+"_cat_to", categoryList.get(0))));
+
             editFrom = (AutoCompleteTextView) rootView.findViewById(R.id.auto_from);
             editTo = (AutoCompleteTextView) rootView.findViewById(R.id.auto_to);
             editFrom.setOnTouchListener(new View.OnTouchListener() {
@@ -255,10 +264,19 @@ public class NavFragment extends Fragment {
             fileStillDownloading = new AtomicBoolean(false);
             ArrayList<String> metaFiles = new ArrayList<>(Arrays.asList(context.getExternalFilesDir(null).list()));
             coordinatorLayout = (CoordinatorLayout) rootView.findViewById(R.id.coordinator_layout_fragment);
-            Snackbar snackbarDownloadFinished = Snackbar.make(coordinatorLayout, place + " Map MetaData files download has finished!", Snackbar.LENGTH_SHORT);
+            Snackbar snackbarDownloadFinished = Snackbar.make(coordinatorLayout, place + " Map metadata files download has finished!", Snackbar.LENGTH_SHORT);
             if (!metaFiles.contains("vertexes_" + place + ".ser")) {
-                new GetFilesWeb(context, place, snackbarDownloadFinished, handleDownloadFinished).execute(locations.returnUrls(place)[0], locations.returnUrls(place)[1]);
-                fileStillDownloading.set(true);
+                dialogWebConnect = new DialogWebConnect(this.context, getActivity());
+                ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+                if (activeNetworkInfo == null)
+                    dialogWebConnect.show();
+                if (activeNetworkInfo != null) {
+                    while (!activeNetworkInfo.isConnected())
+                        dialogWebConnect.show();
+                    new GetFilesWeb(context, place, snackbarDownloadFinished, handleDownloadFinished).execute(locations.returnUrls(place)[0], locations.returnUrls(place)[1]);
+                    fileStillDownloading.set(true);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -283,7 +301,7 @@ public class NavFragment extends Fragment {
             Toast.makeText(context, "Enter the starting point", Toast.LENGTH_SHORT).show();
         else if (!locationList.containsKey(editTo.getText().toString()))
             Toast.makeText(context, "Enter the destination point", Toast.LENGTH_SHORT).show();
-        else if (editFrom.getText().toString().equals(editTo.getText().toString()))
+        else if (editFrom.getText().toString().equals(editTo.getText().toString()) || (favSelected && favPlace.equals(editTo.getText().toString())))
             Toast.makeText(context, "Origin and Destination cannot be same", Toast.LENGTH_SHORT).show();
         else if (radioChecked && !locationPermission.checkLocationPermission()) {
             final Handler handlerLocation = new Handler(new Handler.Callback() {

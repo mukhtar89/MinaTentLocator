@@ -2,11 +2,13 @@ package sa.iff.minatentlocator.Activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.multidex.MultiDex;
@@ -42,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private int navItemId;
     private AboutInfo aboutInfo;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,11 +53,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         context = getApplicationContext();
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         aboutInfo = new AboutInfo(this);
         // load saved navigation state if present
         if (null == savedInstanceState) {
-            navItemId = 0;
+            navItemId = Integer.parseInt(sharedPreferences.getString("tab_default", "0"));
         } else {
             navItemId = savedInstanceState.getInt(NAV_ITEM_ID);
         }
@@ -96,6 +100,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        navPageAdapter = new NavPageAdapter(getSupportFragmentManager(), MainActivity.this);
+        viewPager.setAdapter(navPageAdapter);
+        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        viewPager.setCurrentItem(navItemId);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -115,6 +128,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             } catch (PackageManager.NameNotFoundException e) {
                 e.printStackTrace();
             }
+        }
+        if (id == R.id.settings) {
+            Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
+            startActivity(settingsIntent);
         }
 
         return super.onOptionsItemSelected(item);
@@ -161,7 +178,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         break;
                     case R.id.nav_aziziyah: viewPager.setCurrentItem(2);
                         break;
-                    case R.id.nav_manage: viewPager.setCurrentItem(0);
+                    case R.id.nav_manage: Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
+                        startActivity(settingsIntent);
                         break;
                     case R.id.nav_send: Intent sendIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", "muhammad.28.1989@gmail.com", null));
                         sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Feedback on Hajj Navigator App");

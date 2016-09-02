@@ -1,0 +1,76 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fragment="sa.iff.minatentlocator.Activities.SettingsActivity$CategoryPreferenceFragment"
+    android:backgroundTint="@color/theme_color">
+
+    <PreferenceCategory
+        android:title="Origin Category Defaults"
+        android:summary="Select the Origin Category default from the list" >
+
+        <ListPreference
+            android:defaultValue="Tent"
+            android:entries="@array/minaCat"
+            android:entryValues="@array/minaCat"
+            android:key="mina_cat_from"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="Mina"
+            android:summary="%s"/>
+
+        <ListPreference
+            android:defaultValue="Building"
+            android:entries="@array/makkahCat"
+            android:entryValues="@array/makkahCat"
+            android:key="makkah_cat_from"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="Makkah"
+            android:summary="%s"/>
+
+        <ListPreference
+            android:defaultValue="Buildings"
+            android:entries="@array/aziziyahCat"
+            android:entryValues="@array/aziziyahCat"
+            android:key="aziziyah_cat_from"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="Aziziyah"
+            android:summary="%s"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Destination Category Defaults" >
+
+        <ListPreference
+            android:defaultValue="Tent"
+            android:entries="@array/minaCat"
+            android:entryValues="@array/minaCat"
+            android:key="mina_cat_to"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="Mina"
+            android:summary="%s"/>
+
+        <ListPreference
+            android:defaultValue="Building"
+            android:entries="@array/makkahCat"
+            android:entryValues="@array/makkahCat"
+            android:key="makkah_cat_to"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="Makkah"
+            android:summary="%s"/>
+
+        <ListPreference
+            android:defaultValue="Buildings"
+            android:entries="@array/aziziyahCat"
+            android:entryValues="@array/aziziyahCat"
+            android:key="aziziyah_cat_to"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="Aziziyah"
+            android:summary="%s"/>
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

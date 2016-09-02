@@ -1,5 +1,6 @@
 package sa.iff.minatentlocator;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -15,22 +16,24 @@ public class DialogWebConnect {
     private Context context;
     private final AlertDialog.Builder builderNoWeb, builderWebSelect;
 
-    public DialogWebConnect(Context context) {
+    public DialogWebConnect(Context context, Activity activity) {
         this.context = context;
-        this.builderNoWeb = new AlertDialog.Builder(this.context);
-        this.builderWebSelect = new AlertDialog.Builder(this.context);
+        this.builderNoWeb = new AlertDialog.Builder(activity);
+        this.builderWebSelect = new AlertDialog.Builder(activity);
     }
 
     public void show() {
         builderNoWeb.setTitle("No Internet!");
-        builderNoWeb.setMessage("Thejas News detected that your system is not connected to Internet.");
+        builderNoWeb.setMessage("Hajj Navigator detected that your system is not connected to Internet.");
+        builderNoWeb.setIcon(R.drawable.tent_logo);
         builderNoWeb.setCancelable(true);
         builderNoWeb.setPositiveButton(R.string.dialog_internet, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 //context.startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
                 builderWebSelect.setTitle("No Internet!");
-                builderWebSelect.setMessage("Mina Tent Locator detected that your system is not connected to Internet.");
+                builderWebSelect.setIcon(R.drawable.tent_logo);
+                builderWebSelect.setMessage("Hajj Navigator detected that your system is not connected to Internet.");
                 builderWebSelect.setCancelable(true);
                 builderWebSelect.setPositiveButton(R.string.dialog_wifi, new DialogInterface.OnClickListener() {
                     @Override

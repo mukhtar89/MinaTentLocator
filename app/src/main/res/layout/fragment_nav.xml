@@ -8,7 +8,7 @@
     android:focusableInTouchMode="true"
     android:id="@+id/coordinator_layout_fragment"
     tools:context="sa.iff.minatentlocator.NavFragment"
-    android:background="@color/common_action_bar_splitter"
+    android:background="@color/button_material_light"
     android:theme="@style/Base.Theme.AppCompat.Light">
 
     <!-- TODO: Update blank fragment layout -->

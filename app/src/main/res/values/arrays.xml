@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="minaCat">
+        <item>Civil Defense</item>
+        <item>General</item>
+        <item>Hospital</item>
+        <item>Jamarat</item>
+        <item>Masjid</item>
+        <item>Restaurant</item>
+        <item>Tent</item>
+        <item>Toilets</item>
+        <item>Train</item>
+    </string-array>
+
+    <string-array name="makkahCat" >
+        <item>Building</item>
+        <item>General</item>
+        <item>Hospital</item>
+        <item>Hotel</item>
+        <item>Kaaba</item>
+        <item>Masjid</item>
+        <item>Restaurant</item>
+    </string-array>
+
+    <string-array name="aziziyahCat">
+        <item>Bank/ATM</item>
+        <item>Buildings</item>
+        <item>General</item>
+        <item>Hospital</item>
+        <item>Hotels</item>
+        <item>Masjid</item>
+        <item>Restaurants</item>
+    </string-array>
+
+    <string-array name="tabList">
+        <item>Mina</item>
+        <item>Makkah</item>
+        <item>Aziziyah</item>
+    </string-array>
+
+    <string-array name="tabListValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+</resources>
