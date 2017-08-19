@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/coordinator_layout_fragment">
+
+    <android.support.v4.widget.NestedScrollView
+        android:id="@+id/scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <include layout="@layout/material_view_pager_placeholder"/>
+
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/from_card"
+                android:layout_marginBottom="@dimen/cardMarginVertical"
+                android:layout_marginLeft="@dimen/cardMarginHorizontal"
+                android:layout_marginRight="@dimen/cardMarginHorizontal"
+                android:layout_marginTop="@dimen/cardMarginVertical"
+                android:animateLayoutChanges="true"
+                card_view:cardUseCompatPadding="true"
+                card_view:cardElevation="2dp"
+                card_view:cardCornerRadius="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:animateLayoutChanges="true"
+                    android:background="@android:color/white"
+                    android:id="@+id/origin_table">
+
+                    <RelativeLayout
+                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:background="#D81920">
+
+                        <com.tolstykh.textviewrichdrawable.TextViewRichDrawable
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentLeft="true"
+                            android:layout_alignParentStart="true"
+                            android:id="@+id/fromHead"
+                            android:layout_gravity="start"
+                            android:drawableLeft="@drawable/ic_flight_takeoff_black_48dp"
+                            android:drawableStart="@drawable/ic_flight_takeoff_black_48dp"
+                            android:drawablePadding="5dp"
+                            card_view:compoundDrawableHeight="30dp"
+                            android:drawableTint="#FFFFFF"
+                            android:gravity="center_vertical"
+                            android:padding="10dp"
+                            android:text="Origin"
+                            android:textColor="#FFFFFF"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:orientation="horizontal"
+                            android:layout_alignParentRight="true"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true">
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_margin="3dp"
+                                android:layout_gravity="center_vertical"
+                                android:src="@drawable/ic_my_location_white_48dp"/>
+
+                            <Switch
+                                android:id="@+id/my_loc_switch"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="end"
+                                android:checked="false"
+                                android:paddingBottom="10dp"
+                                android:paddingEnd="10dp"
+                                android:paddingRight="10dp"
+                                android:paddingTop="10dp"
+                                android:switchPadding="10dp"
+                                android:text="My Location"
+                                android:textAlignment="center"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:thumbTint="@android:color/white" />
+                        </LinearLayout>
+
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:id="@+id/favourites_row"
+                        android:background="#ffaa00">
+
+                        <com.tolstykh.textviewrichdrawable.TextViewRichDrawable
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentLeft="true"
+                            android:layout_alignParentStart="true"
+                            android:id="@+id/favourite_label"
+                            android:layout_gravity="start"
+                            android:layout_centerVertical="true"
+                            android:drawableLeft="@drawable/ic_star_white_48dp"
+                            android:drawableStart="@drawable/ic_star_white_48dp"
+                            android:drawablePadding="5dp"
+                            card_view:compoundDrawableHeight="24dp"
+                            android:gravity="center_vertical"
+                            android:padding="10dp"
+                            android:text="Favourites:  "
+                            android:textColor="#FFFFFF"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <Spinner
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toRightOf="@+id/favourite_label"
+                            android:layout_toEndOf="@+id/favourite_label"
+                            android:layout_alignParentRight="true"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:id="@+id/list_favourite"
+                            android:layout_gravity="top"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:padding="5dp"
+                        android:id="@+id/category_row">
+
+                        <com.tolstykh.textviewrichdrawable.TextViewRichDrawable
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/category"
+                            android:id="@+id/category_from"
+                            android:layout_alignParentStart="true"
+                            android:layout_alignParentLeft="true"
+                            android:layout_centerVertical="true"
+                            android:drawableLeft="@drawable/ic_layers_black_48dp"
+                            android:drawableStart="@drawable/ic_layers_black_48dp"
+                            android:drawablePadding="2dp"
+                            card_view:compoundDrawableHeight="24dp"
+                            android:textSize="16sp"
+                            android:padding="5dp"
+                            android:layout_gravity="top"
+                            android:textColor="#000000" />
+
+                        <Spinner
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/list_category_from"
+                            android:layout_toRightOf="@+id/category_from"
+                            android:layout_toEndOf="@+id/category_from"
+                            android:layout_alignParentRight="true"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:textSize="16sp" />
+
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp"
+                        android:id="@+id/place_row">
+
+                        <com.tolstykh.textviewrichdrawable.TextViewRichDrawable
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/place"
+                            android:id="@+id/place_from"
+                            android:gravity="center_vertical"
+                            android:drawableLeft="@drawable/ic_place_black_48dp"
+                            android:drawableStart="@drawable/ic_place_black_48dp"
+                            android:drawablePadding="2dp"
+                            card_view:compoundDrawableHeight="24dp"
+                            android:textSize="16sp"
+                            android:padding="5dp"
+                            android:layout_gravity="top"
+                            android:textColor="#000000" />
+
+                        <sa.iff.minatentlocator.InstantAutoComplete
+                            android:layout_height="wrap_content"
+                            android:layout_width="match_parent"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginLeft="20dp"
+                            android:layout_toEndOf="@+id/place_from"
+                            android:layout_toRightOf="@+id/place_from"
+                            android:text=""
+                            android:hint="Example: 1/162"
+                            android:textColor="@android:color/primary_text_light"
+                            android:id="@+id/auto_from"
+                            android:lines="1"
+                            android:maxLines="1"
+                            android:textSize="16sp"
+                            android:layout_gravity="top"/>
+                    </RelativeLayout>
+
+                </LinearLayout>
+            </android.support.v7.widget.CardView>
+
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/to_card"
+                android:layout_marginBottom="@dimen/cardMarginVertical"
+                android:layout_marginLeft="@dimen/cardMarginHorizontal"
+                android:layout_marginRight="@dimen/cardMarginHorizontal"
+                android:layout_marginTop="@dimen/cardMarginVertical"
+                android:animateLayoutChanges="true"
+                card_view:cardUseCompatPadding="true"
+                card_view:cardElevation="2dp"
+                card_view:cardCornerRadius="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:background="@android:color/white"
+                    android:animateLayoutChanges="true">
+
+                    <RelativeLayout
+                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:background="#20af10">
+
+                        <com.tolstykh.textviewrichdrawable.TextViewRichDrawable
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentLeft="true"
+                            android:layout_alignParentStart="true"
+                            android:id="@+id/toHead"
+                            android:layout_gravity="start"
+                            android:drawableLeft="@drawable/ic_flight_land_black_48dp"
+                            android:drawableStart="@drawable/ic_flight_land_black_48dp"
+                            android:drawablePadding="5dp"
+                            card_view:compoundDrawableHeight="30dp"
+                            android:drawableTint="#FFFFFF"
+                            android:gravity="center_vertical"
+                            android:padding="10dp"
+                            android:text="Destination"
+                            android:textColor="#FFFFFF"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:padding="5dp">
+
+                        <com.tolstykh.textviewrichdrawable.TextViewRichDrawable
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/category"
+                            android:id="@+id/category_to"
+                            android:layout_alignParentStart="true"
+                            android:layout_alignParentLeft="true"
+                            android:layout_centerVertical="true"
+                            android:drawableLeft="@drawable/ic_layers_black_48dp"
+                            android:drawableStart="@drawable/ic_layers_black_48dp"
+                            android:drawablePadding="2dp"
+                            card_view:compoundDrawableHeight="24dp"
+                            android:textSize="16sp"
+                            android:padding="5dp"
+                            android:layout_gravity="top"
+                            android:textColor="#000000" />
+
+                        <Spinner
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/list_category_to"
+                            android:layout_toRightOf="@+id/category_to"
+                            android:layout_toEndOf="@+id/category_to"
+                            android:layout_alignParentRight="true"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:textSize="16sp" />
+
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp">
+
+                        <com.tolstykh.textviewrichdrawable.TextViewRichDrawable
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/place"
+                            android:id="@+id/place_to"
+                            android:gravity="center_vertical"
+                            android:drawableLeft="@drawable/ic_place_black_48dp"
+                            android:drawableStart="@drawable/ic_place_black_48dp"
+                            android:drawablePadding="2dp"
+                            card_view:compoundDrawableHeight="24dp"
+                            android:textSize="16sp"
+                            android:padding="5dp"
+                            android:layout_gravity="top"
+                            android:textColor="#000000" />
+
+                        <sa.iff.minatentlocator.InstantAutoComplete
+                            android:layout_height="wrap_content"
+                            android:layout_width="match_parent"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginLeft="20dp"
+                            android:layout_toEndOf="@+id/place_to"
+                            android:layout_toRightOf="@+id/place_to"
+                            android:text=""
+                            android:hint="Example: 1/162"
+                            android:textColor="@android:color/primary_text_light"
+                            android:id="@+id/auto_to"
+                            android:lines="1"
+                            android:maxLines="2"
+                            android:textSize="16sp"
+                            android:layout_gravity="top" />
+                    </RelativeLayout>
+
+                </LinearLayout>
+            </android.support.v7.widget.CardView>
+
+        </LinearLayout>
+
+    </android.support.v4.widget.NestedScrollView>
+
+    <android.support.design.widget.FloatingActionButton
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:src="@drawable/ic_directions_walk_white_48dp"
+        app:backgroundTint="#9c27b0"
+        app:borderWidth="0dp"
+        app:elevation="6dp"
+        app:fabSize="normal" />
+
+</android.support.design.widget.CoordinatorLayout>

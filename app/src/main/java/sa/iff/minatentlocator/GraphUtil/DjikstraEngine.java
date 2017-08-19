@@ -14,18 +14,18 @@ import java.util.Set;
  */
 public class DjikstraEngine {
 
-    private List<Vertex> nodes;
-    private List<Edge> edges;
-    private Set<Vertex> visitedNodes, unVisitedNodes;
-    private Map<Vertex, Vertex> predecessors;
-    private Map<Vertex, Double> distance;
+    private static List<Vertex> nodes;
+    private static List<Edge> edges;
+    private static Set<Vertex> visitedNodes, unVisitedNodes;
+    private static Map<Vertex, Vertex> predecessors;
+    private static Map<Vertex, Double> distance;
 
-    public DjikstraEngine(Graph graph) {
-        this.nodes = graph.getVertexes();
-        this.edges = graph.getEdges();
+    public static void setGraph(Graph graph) {
+        nodes = graph.getVertexes();
+        edges = graph.getEdges();
     }
 
-    public void execute(Vertex source) {
+    public static void execute(Vertex source) {
         visitedNodes = new HashSet<>();
         unVisitedNodes = new HashSet<>();
         distance = new HashMap<>();
@@ -40,7 +40,7 @@ public class DjikstraEngine {
         }
     }
 
-    private void findMinimalDistances(Vertex node) {
+    private static void findMinimalDistances(Vertex node) {
         List<Vertex> neighbours = getNeighbours(node);
         Iterator<Vertex> iter = neighbours.iterator();
         Vertex target;
@@ -54,7 +54,7 @@ public class DjikstraEngine {
         }
     }
 
-    private Double getDistance(Vertex node, Vertex target) {
+    private static Double getDistance(Vertex node, Vertex target) {
         for (Edge edge :  edges) {
             if ((edge.getSource() == node && edge.getDestination() == target) || (edge.getSource() == target && edge.getDestination() == node))
                 return edge.getDistance();
@@ -62,7 +62,7 @@ public class DjikstraEngine {
         return Double.MAX_VALUE;
     }
 
-    private List<Vertex> getNeighbours(Vertex node) {
+    private static List<Vertex> getNeighbours(Vertex node) {
         List<Vertex> neighbours = new ArrayList<>();
         for (Edge edge : edges) {
             if (edge.getSource() == node && !isSettled(edge.getDestination()))
@@ -73,7 +73,7 @@ public class DjikstraEngine {
         return neighbours;
     }
 
-    private Vertex getMinimum(Set<Vertex> unVisitedNodes) {
+    private static Vertex getMinimum(Set<Vertex> unVisitedNodes) {
         Vertex minimum = null, temp;
         for (Vertex unVisitedNode : unVisitedNodes) {
             temp = unVisitedNode;
@@ -85,11 +85,11 @@ public class DjikstraEngine {
         return minimum;
     }
 
-    private boolean isSettled(Vertex destination) {
+    private static boolean isSettled(Vertex destination) {
         return visitedNodes.contains(destination);
     }
 
-    private Double getShortestDistance(Vertex node) {
+    private static Double getShortestDistance(Vertex node) {
         Double dist = distance.get(node);
         if (dist == null)
             return Double.MAX_VALUE;
@@ -97,7 +97,7 @@ public class DjikstraEngine {
             return dist;
     }
 
-    public ArrayList<Vertex> getPath(Vertex target) {
+    public static ArrayList<Vertex> getPath(Vertex target) {
         ArrayList<Vertex> path = new ArrayList<>();
         Vertex step = target;
        if (!predecessors.containsKey(step))
@@ -111,17 +111,17 @@ public class DjikstraEngine {
         return path;
     }
 
-    public List<Vertex> getNodes () {
+    public static List<Vertex> getNodes() {
         return nodes;
     }
 
-    public void setNodes(List<Vertex> nodes) { this.nodes = nodes;}
+    public static void setNodes(List<Vertex> nodes) { DjikstraEngine.nodes = nodes;}
 
-    public Map<Vertex, Vertex> getPredecessors() {
+    public static Map<Vertex, Vertex> getPredecessors() {
         return predecessors;
     }
 
-    public void setPredecessors(Map<Vertex, Vertex> predecessors) {
-        this.predecessors = predecessors;
+    public static void setPredecessors(Map<Vertex, Vertex> predecessors) {
+        DjikstraEngine.predecessors = predecessors;
     }
 }

@@ -44,5 +44,6 @@
         <item>1</item>
         <item>2</item>
     </string-array>
+    <string-array name="do_not_show_tip_again">Do not show this tip again</string-array>
 
 </resources>

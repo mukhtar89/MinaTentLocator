@@ -1,10 +1,6 @@
 package sa.iff.minatentlocator.ProtoBufUtil;
 
-import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
@@ -17,9 +13,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-import sa.iff.minatentlocator.DialogWebConnect;
-import sa.iff.minatentlocator.GenerateNotification;
-import sa.iff.minatentlocator.RotaTask;
+import sa.iff.minatentlocator.Utils.GenerateNotification;
 
 /**
  * Created by Mukhtar on 9/18/2015.

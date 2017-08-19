@@ -1,23 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_mina"
-            android:icon="@drawable/night_camping"
-            android:title="Mina" />
-        <item
-            android:id="@+id/nav_makkah"
-            android:icon="@drawable/kaaba_mecca"
-            android:title="Makkah" />
-        <item
-            android:id="@+id/nav_aziziyah"
-            android:icon="@drawable/embassy"
-            android:title="Aziziyah" />
-        <item
-            android:id="@+id/nav_favourites"
-            android:icon="@drawable/ic_favorite_black_48dp"
-            android:title="Favourites" />
+    <group>
+        <item android:title="Locations">
+            <menu>
+                <item
+                    android:id="@+id/nav_mina"
+                    android:icon="@drawable/night_camping"
+                    android:title="Mina" />
+                <item
+                    android:id="@+id/nav_makkah"
+                    android:icon="@drawable/kaaba_mecca"
+                    android:title="Makkah" />
+                <item
+                    android:id="@+id/nav_aziziyah"
+                    android:icon="@drawable/embassy"
+                    android:title="Aziziyah" />
+            </menu>
+        </item>
+    </group>
+
+    <group>
+        <item android:title="Management">
+            <menu>
+                <item
+                    android:id="@+id/nav_favourites"
+                    android:icon="@drawable/ic_favorite_black_48dp"
+                    android:title="Favourites" />
+                <item
+                    android:id="@+id/nav_manage"
+                    android:icon="@drawable/ic_settings_black_48dp"
+                    android:title="Settings" />
+                <item
+                    android:id="@+id/nav_about"
+                    android:icon="@drawable/ic_info_black_48dp"
+                    android:title="About" />
+            </menu>
+        </item>
     </group>
 
 
@@ -31,14 +50,6 @@
                 android:id="@+id/nav_send"
                 android:icon="@drawable/ic_rate_review_black_48dp"
                 android:title="Send Feedback" />
-            <item
-                android:id="@+id/nav_manage"
-                android:icon="@drawable/ic_settings_black_48dp"
-                android:title="Settings" />
-            <item
-                android:id="@+id/nav_about"
-                android:icon="@drawable/ic_info_black_48dp"
-                android:title="About" />
         </menu>
     </item>
 

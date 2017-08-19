@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import sa.iff.minatentlocator.ExpandableListAdapter;
+import sa.iff.minatentlocator.Utils.ExpandableListAdapter;
 import sa.iff.minatentlocator.R;
 import sa.iff.minatentlocator.SharedPrefArrayUtils;
 
